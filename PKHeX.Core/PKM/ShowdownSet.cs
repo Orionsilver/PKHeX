@@ -145,9 +145,6 @@ namespace PKHeX.Core
                 }
             }
 
-            IVs = IVsSpeedFirst;
-            EVs = EVsSpeedFirst;
-
             // Showdown Quirks
             Form = ConvertFormFromShowdown(Form, Species, Ability);
             // Set Form
@@ -221,11 +218,7 @@ namespace PKHeX.Core
                 var str = $"- {moves[move]}";
                 if (move == 237) // Hidden Power
                 {
-                    int hp = 0;
-                    for (int i = 0; i < 6; i++)
-                        hp |= (IVs[i] & 1) << i;
-                    hp *= 0xF;
-                    hp /= 0x3F;
+                    int hp = GetHiddenPowerType(IVs);
                     str += $" [{hptypes[hp]}]";
                 }
                 yield return str;
@@ -277,36 +270,49 @@ namespace PKHeX.Core
             }
 
             // Nickname Detection
-            string spec = line;
-            if (spec.Contains("(") && spec.Contains(")"))
-                ParseSpeciesNickname(ref spec);
-
+            if (line.Contains("(") && line.Contains(")"))
+                ParseSpeciesNickname(line);
+            else
+                ParseSpeciesForm(line);
+        }
+        private bool ParseSpeciesForm(string spec)
+        {
             spec = spec.Trim();
             if ((Species = Array.IndexOf(species, spec)) >= 0) // success, nothing else!
-                return;
+                return true;
 
             // Forme string present.
             int end = spec.LastIndexOf('-');
             if (end < 0)
-                return;
+                return false;
 
             Species = Array.IndexOf(species, spec.Substring(0, end).Trim());
             Form = spec.Substring(end + 1);
 
-            if (Species < 0) // failure to parse, check edge cases
+            if (Species >= 0)
+                return false;
+
+            // failure to parse, check edge cases
+            var edge = new[] {784, 250}; // all species with dashes in English Name (Kommo-o & Ho-Oh)
+            foreach (var e in edge)
             {
-                var edge = new[] {784, 250}; // all species with dashes in English Name (Kommo-o & Ho-Oh)
-                foreach (var e in edge)
-                {
-                    if (!spec.StartsWith(species[e]))
-                        continue;
-                    Species = e;
-                    Form = spec.Substring(species[e].Length);
-                    return;
-                }
+                if (!spec.StartsWith(species[e]))
+                    continue;
+                Species = e;
+                Form = spec.Substring(species[e].Length);
+                return false;
             }
+
+            // Version Megas
+            end = spec.LastIndexOf('-', Math.Max(0, end - 1));
+            if (end < 0)
+                return false;
+            Species = Array.IndexOf(species, spec.Substring(0, end).Trim());
+            Form = spec.Substring(end + 1);
+
+            return Species >= 0;
         }
-        private void ParseSpeciesNickname(ref string line)
+        private void ParseSpeciesNickname(string line)
         {
             int index = line.LastIndexOf("(", StringComparison.Ordinal);
             string n1, n2;
@@ -323,12 +329,15 @@ namespace PKHeX.Core
                 n1 = line.Substring(end + 2);
             }
 
-            int dash = n2.LastIndexOf('-');
-            if (dash < 0) dash = n2.Length;
-            bool inverted = Array.IndexOf(species, n2.Replace(" ", string.Empty)) > -1 
-              || (Species = Array.IndexOf(species, n2.Substring(0, dash))) > 0;
-            line = inverted ? n2 : n1;
-            Nickname = inverted ? n1 : n2;
+            if (ParseSpeciesForm(n2))
+            {
+                // successful parse on n2=>Species/Form, n1 is nickname
+                Nickname = n1;
+                return;
+            }
+            // other case is possibly true (or both invalid).
+            Nickname = n2;
+            ParseSpeciesForm(n1);
         }
         private string ParseLineMove(string line)
         {
@@ -344,7 +353,10 @@ namespace PKHeX.Core
                 int hpVal = Array.IndexOf(hptypes, type); // Get HP Type
 
                 if (IVs.Any(z => z != 31))
-                { } // don't modify IVs
+                {
+                    if (!SetIVsForHiddenPower(hpVal, IVs))
+                        InvalidLines.Add($"Invalid IVs for Hidden Power Type: {type}");
+                }
                 else if (hpVal >= 0)
                     IVs = PKX.SetHPIVs(hpVal, IVs); // Get IVs
                 else
@@ -352,6 +364,73 @@ namespace PKHeX.Core
             }
             moveString = "Hidden Power";
             return moveString;
+        }
+        private static int GetHiddenPowerType(IReadOnlyList<int> IVs)
+        {
+            int hp = 0;
+            for (int i = 0; i < 6; i++)
+                hp |= (IVs[i] & 1) << i;
+            hp *= 0xF;
+            hp /= 0x3F;
+            return hp;
+        }
+        private static bool SetIVsForHiddenPower(int hpVal, int[] IVs)
+        {
+            if (IVs.All(z => z == 31))
+            {
+                PKX.SetHPIVs(hpVal, IVs); // Get IVs
+                return true;
+            }
+
+            int current = GetHiddenPowerType(IVs);
+            if (current == hpVal)
+                return true; // no mods necessary
+
+            // Required HP type doesn't match IVs. Make currently-flawless IVs flawed.
+            int[] best = GetSuggestedHiddenPowerIVs(hpVal, IVs);
+            if (best == null)
+                return false; // can't force hidden power?
+
+            // set IVs back to array
+            for (int i = 0; i < IVs.Length; i++)
+                IVs[i] = best[i];
+            return true;
+        }
+        private static int[] GetSuggestedHiddenPowerIVs(int hpVal, int[] IVs)
+        {
+            var flawless = IVs.Select((v, i) => v == 31 ? i : -1).Where(v => v != -1).ToArray();
+            var permutations = GetPermutations(flawless, flawless.Length);
+            int flawedCount = 0;
+            int[] best = null;
+            foreach (var permute in permutations)
+            {
+                var ivs = (int[])IVs.Clone();
+                foreach (var item in permute)
+                {
+                    ivs[item] ^= 1;
+                    if (hpVal != GetHiddenPowerType(ivs))
+                        continue;
+
+                    int ct = ivs.Count(z => z == 31);
+                    if (ct <= flawedCount)
+                        break; // any further flaws are always worse
+
+                    flawedCount = ct;
+                    best = ivs;
+                    break; // any further flaws are always worse
+                }
+            }
+            return best;
+        }
+        private static IEnumerable<IEnumerable<T>> GetPermutations<T>(IList<T> list, int length)
+        {
+            // https://stackoverflow.com/a/10630026
+            if (length == 1)
+                return list.Select(t => new[] { t });
+
+            return GetPermutations(list, length - 1)
+                .SelectMany(t => list.Where(e => !t.Contains(e)),
+                    (t1, t2) => t1.Concat(new[] { t2 }));
         }
         private void ParseLineEVs(string line)
         {
@@ -367,6 +446,7 @@ namespace PKHeX.Core
                 else
                     InvalidLines.Add($"Unknown EV Type input: {evlist[i * 2]}");
             }
+            EVs = EVsSpeedFirst;
         }
         private void ParseLineIVs(string line)
         {
@@ -382,6 +462,7 @@ namespace PKHeX.Core
                 else
                     InvalidLines.Add($"Unknown IV Type input: {ivlist[i * 2]}");
             }
+            IVs = IVsSpeedFirst;
         }
         private static string ConvertFormToShowdown(string form, int spec)
         {
@@ -418,6 +499,8 @@ namespace PKHeX.Core
                 default:
                     if (Legal.Totem_USUM.Contains(spec) && form == "Large")
                         return Legal.Totem_Alolan.Contains(spec) ? "Alola-Totem" : "Totem";
+                    if (form.StartsWith("Mega"))
+                        return form.Replace(" ", "-");
                     return form;
             }
         }
@@ -459,9 +542,11 @@ namespace PKHeX.Core
 
                 default:
                     if (form == null)
-                        return form;
+                        return null;
                     if (Legal.Totem_USUM.Contains(spec) && form.EndsWith("Totem"))
                         return "Large";
+                    if (form.StartsWith("Mega"))
+                        return form.Replace("-", " ");
                     return form;
             }
         }

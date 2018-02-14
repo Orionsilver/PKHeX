@@ -221,11 +221,6 @@ namespace PKHeX.Core
                 Gift = true, Species = 801, Level = 50, Location = 40001, Shiny = false, IV3 = true, HeldItem = 795, Ability = 2,
                 Fateful = true, RibbonWishing = true, Relearn = new [] {705, 430, 381, 270}, Ball = 0x10, // Cherish
             },
-            new EncounterStatic // Pikachu (Pretty Wing), should probably be a fake mystery gift as it has OT details
-            {
-                Gift = true, Species = 25, Level = 21, Location = 40005, Form = 7, HeldItem = 571, Ability = 1,
-                Fateful = true, RibbonWishing = true, Relearn = new[] {85, 98, 87, 231}, Nature = Nature.Hardy,
-            },
 
             new EncounterStatic { Gift = true, Species = 718, Form = 0, Level = 50, Shiny = false, Location = 118, IV3 = true, }, // Zygarde
             new EncounterStatic { Gift = true, Species = 718, Form = 1, Level = 50, Shiny = false, Location = 118, IV3 = true, }, // Zygarde
@@ -367,8 +362,12 @@ namespace PKHeX.Core
             new EncounterStatic { Species = 805, Level = 60, Location = 164, Ability = 1, IV3 = true, Version = GameVersion.UM }, // Stakataka @ Poni Grove
             new EncounterStatic { Species = 806, Level = 60, Location = 164, Ability = 1, IV3 = true, Version = GameVersion.US }, // Blacephalon @ Poni Grove
             new EncounterStatic { Species = 101, Level = 60, Location = 224, Ability = 1, Shiny = false, }, // Electrode @ Team Rocket's Castle
-            
-            new EncounterStatic { Species = 739, Level = 25, Location = 106, Ability = 1,  }, // Crabrawler @ Route 10
+
+            // Crabrawler in Berry Piles
+            new EncounterStatic { Species = 739, Level = 25, Location = 106, }, // Route 10
+            new EncounterStatic { Species = 739, Level = 28, Location = 110, }, // Ula'ula Beach
+            new EncounterStatic { Species = 739, Level = 31, Location = 118, }, // Route 16
+            new EncounterStatic { Species = 739, Level = 32, Location = 120, }, // Route 17
         };
         internal static readonly EncounterTrade[] TradeGift_USUM =
         {
@@ -416,7 +415,7 @@ namespace PKHeX.Core
             int[] minLevels = { 1, 11, 21, 37, 49 };
             int[][] speciesSM =
             {
-                new[] {/* SN  */ 021, 041, 090, 278, 731},  // 1-7
+                new[] {627/*SN*/, 021, 041, 090, 278, 731}, // 1-7
                 new[] {064, 081, 092, 198, 426, 703},       // 11-17
                 new[] {060, 120, 127, 661, 709, 771},       // 21-27
                 new[] {227, 375, 707},                      // 37-43
