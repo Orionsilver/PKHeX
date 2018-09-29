@@ -64,7 +64,6 @@
             nameof(IRibbonSetUnique4.RibbonAbilityPair),
             nameof(IRibbonSetUnique4.RibbonAbilityWorld),
         };
-
         private static readonly string[] RibbonSetNamesUnique4Contest3 =
         {
             nameof(IRibbonSetUnique4.RibbonG3Cool),
@@ -88,7 +87,6 @@
             nameof(IRibbonSetUnique4.RibbonG3ToughHyper),
             nameof(IRibbonSetUnique4.RibbonG3ToughMaster),
         };
-
         private static readonly string[] RibbonSetNamesUnique4Contest4 =
         {
             nameof(IRibbonSetUnique4.RibbonG4Cool),
@@ -112,7 +110,6 @@
             nameof(IRibbonSetUnique4.RibbonG4ToughUltra),
             nameof(IRibbonSetUnique4.RibbonG4ToughMaster),
         };
-
         internal static bool[] RibbonBitsAbility(this IRibbonSetUnique4 set)
         {
             if (set == null)
@@ -125,11 +122,12 @@
                 set.RibbonAbilityMulti,
                 set.RibbonAbilityPair,
                 set.RibbonAbilityWorld,
+
             };
         }
-
         internal static bool[] RibbonBitsContest3(this IRibbonSetUnique4 set)
         {
+
             if (set == null)
                 return new bool[20];
 
@@ -161,7 +159,6 @@
                 set.RibbonG3ToughMaster,
             };
         }
-
         internal static bool[] RibbonBitsContest4(this IRibbonSetUnique4 set)
         {
             if (set == null)
@@ -195,9 +192,8 @@
                 set.RibbonG4ToughMaster,
             };
         }
-
-        internal static string[] RibbonNamesAbility(this IRibbonSetUnique4 _) => RibbonSetNamesUnique4Ability;
-        internal static string[] RibbonNamesContest3(this IRibbonSetUnique4 _) => RibbonSetNamesUnique4Contest3;
-        internal static string[] RibbonNamesContest4(this IRibbonSetUnique4 _) => RibbonSetNamesUnique4Contest4;
+        internal static string[] RibbonNamesAbility(this IRibbonSetUnique4 set) => RibbonSetNamesUnique4Ability;
+        internal static string[] RibbonNamesContest3(this IRibbonSetUnique4 set) => RibbonSetNamesUnique4Contest3;
+        internal static string[] RibbonNamesContest4(this IRibbonSetUnique4 set) => RibbonSetNamesUnique4Contest4;
     }
 }

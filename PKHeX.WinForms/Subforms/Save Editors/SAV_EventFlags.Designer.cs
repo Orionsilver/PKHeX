@@ -1,6 +1,6 @@
 ﻿namespace PKHeX.WinForms
 {
-    sealed partial class SAV_EventFlags
+    partial class SAV_EventFlags
     {
         /// <summary>
         /// Required designer variable.

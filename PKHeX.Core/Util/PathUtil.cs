@@ -2,13 +2,12 @@
 
 namespace PKHeX.Core
 {
-    public static partial class Util
+    public partial class Util
     {
         public static string CleanFileName(string fileName)
         {
             return string.Concat(fileName.Split(Path.GetInvalidFileNameChars()));
         }
-
         public static string TrimFromZero(string input)
         {
             int index = input.IndexOf('\0');

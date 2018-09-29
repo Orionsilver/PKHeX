@@ -2,7 +2,7 @@
 {
     public static class BoxWallpaper
     {
-        public static string GetWallpaperResourceName(SaveFile SAV, int index)
+        public static string GetWallpaper(SaveFile SAV, int index)
         {
             index++;
             string s = $"box_wp{index:00}";
@@ -33,7 +33,6 @@
             }
             return s;
         }
-
         public static bool IsWallpaperRed(SaveFile SAV, int box)
         {
             switch (SAV.Generation)

@@ -1,5 +1,3 @@
-using System;
-
 namespace PKHeX.Core
 {
     /// <summary>
@@ -22,7 +20,5 @@ namespace PKHeX.Core
             Encounter = encounter;
             Check = check;
         }
-
-        public PKM ConvertToPKM(ITrainerInfo SAV) => throw new ArgumentException($"Cannot convert an {nameof(EncounterRejected)} to PKM.");
     }
 }

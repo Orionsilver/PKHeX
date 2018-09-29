@@ -1,6 +1,6 @@
 ﻿namespace PKHeX.WinForms
 {
-    sealed partial class SAV_BoxViewer
+    partial class SAV_BoxViewer
     {
         /// <summary>
         /// Required designer variable.

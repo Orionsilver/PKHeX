@@ -16,7 +16,7 @@ namespace PKHeX.Core
         /// <summary>
         /// Due to some messages repeating (Trainer names), keep a list of repeated values for faster lookup.
         /// </summary>
-        private static readonly Dictionary<string, string> Lookup = new Dictionary<string, string>(INIT_COUNT);
+        private static readonly Dictionary<string, string> Lookup = new Dictionary<string, string>();
 
         /// <summary>
         /// Checks to see if a phrase contains filtered content.
@@ -34,37 +34,22 @@ namespace PKHeX.Core
 
             var msg = message.ToLower();
             // Check dictionary
-            lock (dictLock)
-            {
-                if (Lookup.TryGetValue(msg, out regMatch))
-                    return regMatch != null;
-            }
+            if (Lookup.TryGetValue(msg, out regMatch))
+                return regMatch != null;
 
-            // not in dictionary, check patterns
             foreach (var pattern in Patterns)
             {
                 if (!Regex.IsMatch(msg, pattern))
                     continue;
-
-                // match found, cache result
                 regMatch = pattern;
-                lock (dictLock)
-                    Lookup.Add(msg, regMatch);
+                Lookup.Add(msg, regMatch);
                 return true;
             }
 
-            // didn't match any pattern, cache result
-            lock (dictLock)
-            {
-                if ((Lookup.Count & ~MAX_COUNT) != 0)
-                    Lookup.Clear(); // reset
-                Lookup.Add(msg, regMatch = null);
-            }
+            if (Lookup.Count > 100_000) // arbitrary cap
+                Lookup.Clear(); // reset
+            Lookup.Add(msg, regMatch = null);
             return false;
         }
-
-        private static readonly object dictLock = new object();
-        private const int MAX_COUNT = (1 << 17) - 1; // arbitrary cap for max dictionary size
-        private const int INIT_COUNT = 1 << 10; // arbitrary init size to limit future doublings
     }
 }

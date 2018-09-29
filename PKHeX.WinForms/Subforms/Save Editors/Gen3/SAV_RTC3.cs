@@ -8,12 +8,11 @@ namespace PKHeX.WinForms
     {
         private readonly SaveFile Origin;
         private readonly SAV3 SAV;
-
         public SAV_RTC3(SaveFile sav)
         {
+            SAV = (SAV3)(Origin = sav).Clone();
             InitializeComponent();
             WinFormsUtil.TranslateInterface(this, Main.CurrentLanguage);
-            SAV = (SAV3)(Origin = sav).Clone();
 
             ClockInitial = SAV.ClockInitial;
             ClockElapsed = SAV.ClockElapsed;
@@ -22,6 +21,7 @@ namespace PKHeX.WinForms
 
         private readonly SAV3.RTC3 ClockInitial;
         private readonly SAV3.RTC3 ClockElapsed;
+
 
         private void LoadData()
         {
@@ -35,7 +35,6 @@ namespace PKHeX.WinForms
             NUD_EMinute.Value = Math.Min(NUD_EMinute.Maximum, ClockElapsed.Minute);
             NUD_ESecond.Value = Math.Min(NUD_ESecond.Maximum, ClockElapsed.Second);
         }
-
         private void SaveData()
         {
             ClockInitial.Day = (ushort)NUD_IDay.Value;
@@ -48,23 +47,20 @@ namespace PKHeX.WinForms
             ClockElapsed.Minute = (byte)NUD_EMinute.Value;
             ClockElapsed.Second = (byte)NUD_ESecond.Value;
         }
-
         private void B_Save_Click(object sender, EventArgs e)
         {
             SaveData();
-
+            
             SAV.ClockInitial = ClockInitial;
             SAV.ClockElapsed = ClockElapsed;
 
             Origin.SetData(SAV.Data, 0);
             Close();
         }
-
         private void B_Cancel_Click(object sender, EventArgs e)
         {
             Close();
         }
-
         private void B_Reset_Click(object sender, EventArgs e)
         {
             NUD_IDay.Value = NUD_IHour.Value = NUD_IMinute.Value = NUD_ISecond.Value = 0;
@@ -74,7 +70,7 @@ namespace PKHeX.WinForms
 
         private void B_BerryFix_Click(object sender, EventArgs e)
         {
-            NUD_EDay.Value = Math.Max((2 * 366) + 2, NUD_EDay.Value); // advance
+            NUD_EDay.Value = Math.Max(2*366 + 2, NUD_EDay.Value); // advance
             System.Media.SystemSounds.Asterisk.Play();
         }
     }

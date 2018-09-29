@@ -81,7 +81,6 @@ namespace PKHeX.Core
                 yield return new SeedInfo { Seed = s1 };
             }
         }
-
         private static LockInfo VerifyPIDCriteria(uint pid, FrameGenerator info)
         {
             // Nature locks are always a given

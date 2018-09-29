@@ -83,10 +83,8 @@
     </Compile>
     <Compile Include="Saves\MemeCrypto\MemeCryptoTests.cs" />
     <Compile Include="Saves\SMTests.cs" />
-    <Compile Include="Simulator\ShowdownSetTests.cs" />
     <Compile Include="Util\DataUtilTests.cs" />
     <Compile Include="Util\DateUtilTests.cs" />
-    <Compile Include="Util\GeoLocationTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\PKHeX.Core\PKHeX.Core.csproj">

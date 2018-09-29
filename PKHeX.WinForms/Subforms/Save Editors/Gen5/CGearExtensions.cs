@@ -11,7 +11,6 @@ namespace PKHeX.WinForms
         {
             return ImageUtil.GetBitmap(bg.GetImageData(), CGearBackground.Width, CGearBackground.Height);
         }
-
         public static CGearBackground GetCGearBackground(Bitmap img)
         {
             const int Width = CGearBackground.Width;

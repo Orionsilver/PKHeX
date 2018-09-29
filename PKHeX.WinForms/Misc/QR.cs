@@ -8,8 +8,6 @@ using System.Windows.Forms;
 using PKHeX.Core;
 using QRCoder;
 
-using static PKHeX.Core.MessageStrings;
-
 namespace PKHeX.WinForms
 {
     public partial class QR : Form
@@ -30,14 +28,14 @@ namespace PKHeX.WinForms
             const int stretch = 50;
             Height += stretch;
 
-            if (pkm?.Format == 7)
+            if (pkm != null && pkm.Format == 7)
                 Height += 40;
 
             this.qr = qr;
             this.icon = icon;
             Lines = lines;
 
-            if (pkm?.Format == 7)
+            if (pkm != null && pkm.Format == 7)
                 UpdateBoxSlotCopies(null, null);
             else
                 RefreshImage();
@@ -45,22 +43,15 @@ namespace PKHeX.WinForms
 
         private void RefreshImage()
         {
-            Font font = !Main.Unicode ? Font : FontUtil.GetPKXFont((float)8.25);
+            Font font = !Main.Unicode ? FontLabel.Font : FontUtil.GetPKXFont((float)8.25);
             Image preview = new Bitmap(45, 45);
             using (Graphics gfx = Graphics.FromImage(preview))
             {
                 gfx.FillRectangle(new SolidBrush(Color.White), 0, 0, preview.Width, preview.Height);
-                int x = (preview.Width / 2) - (icon.Width / 2);
-                int y = (preview.Height / 2) - (icon.Height / 2);
-                gfx.DrawImage(icon, x, y);
+                gfx.DrawImage(icon, preview.Width / 2 - icon.Width / 2, preview.Height / 2 - icon.Height / 2);
             }
             // Layer on Preview Image
-            Image pic;
-            {
-                int x = (qr.Width / 2) - (preview.Width / 2);
-                int y = (qr.Height / 2) - (preview.Height / 2);
-                pic = ImageUtil.LayerImage(qr, preview, x, y);
-            }
+            Image pic = ImageUtil.LayerImage(qr, preview, qr.Width / 2 - preview.Width / 2, qr.Height / 2 - preview.Height / 2, 1);
 
             Image newpic = new Bitmap(PB_QR.Width, PB_QR.Height);
             using (Graphics g = Graphics.FromImage(newpic))
@@ -80,14 +71,14 @@ namespace PKHeX.WinForms
 
         private void PB_QR_Click(object sender, EventArgs e)
         {
-            if (DialogResult.Yes != WinFormsUtil.Prompt(MessageBoxButtons.YesNo, MsgQRClipboardImage)) return;
+            if (DialogResult.Yes != WinFormsUtil.Prompt(MessageBoxButtons.YesNo, "Copy QR Image to Clipboard?")) return;
             try { Clipboard.SetImage(PB_QR.BackgroundImage); }
-            catch { WinFormsUtil.Alert(MsgQRClipboardFail); }
+            catch { WinFormsUtil.Alert("Failed to set Image to Clipboard"); }
         }
-
+        
         // QR Utility
         private const string QR6PathBad = "null/#"; // prefix to prevent URL from loading
-        private const string QR6Path = "http://lunarcookies.github.io/b1s1.html#";
+        private const string QR6Path = @"http://lunarcookies.github.io/b1s1.html#";
         private const string DecodeAPI = "http://api.qrserver.com/v1/read-qr-code/?fileurl=";
         private const int QRSize = 365;
         private static readonly string EncodeAPI = $"http://chart.apis.google.com/chart?chs={QRSize}x{QRSize}&cht=qr&chl=";
@@ -95,23 +86,22 @@ namespace PKHeX.WinForms
         internal static byte[] GetQRData(string address)
         {
             // Fetch data from QR code...
-            try { if (address.Length < 4 || !address.StartsWith("http")) { WinFormsUtil.Alert(MsgQRUrlFailPath, address); return null; } }
-            catch { WinFormsUtil.Alert(MsgQRUrlFailPath, address); return null; }
+            try { if (address.Length < 4 || !address.StartsWith("http")) { WinFormsUtil.Alert("Clipboard text is not a valid URL:", address); return null; } }
+            catch { WinFormsUtil.Alert("Clipboard text is not a valid URL:", address); return null; }
             string webURL = DecodeAPI + HttpUtility.UrlEncode(address);
             string data;
             try
             {
                 data = NetUtil.GetStringFromURL(webURL);
-                if (data.Contains("could not find")) { WinFormsUtil.Alert(MsgQRUrlFailImage); return null; }
-                if (data.Contains("filetype not supported")) { WinFormsUtil.Alert(MsgQRUrlFailType, address); return null; }
+                if (data.Contains("could not find")) { WinFormsUtil.Alert("Reader could not find QR data in the image."); return null; }
+                if (data.Contains("filetype not supported")) { WinFormsUtil.Alert("Input URL is not valid. Double check that it is an image (jpg/png).", address); return null; }
             }
-            catch { WinFormsUtil.Alert(MsgQRUrlFailConnection); return null; }
+            catch { WinFormsUtil.Alert("Unable to connect to the internet to decode QR code."); return null; }
 
             // Quickly convert the json response to a data string
             try { return DecodeQRJson(data); }
-            catch (Exception e) { WinFormsUtil.Alert(MsgQRUrlFailConvert, e.Message); return null; }
+            catch (Exception e) { WinFormsUtil.Alert("QR string to Data failed.", e.Message); return null; }
         }
-
         private static byte[] DecodeQRJson(string data)
         {
             const string cap = "\",\"error\":null}]}]";
@@ -130,7 +120,7 @@ namespace PKHeX.WinForms
                 string fstr = Regex.Unescape(pkstr);
                 byte[] raw = Encoding.Unicode.GetBytes(fstr);
                 // Remove 00 interstitials and retrieve from offset 0x30, take PK7 Stored Size (always)
-                return raw.ToList().Where((_, i) => i % 2 == 0).Skip(0x30).Take(0xE8).ToArray();
+                return raw.ToList().Where((c, i) => i % 2 == 0).Skip(0x30).Take(0xE8).ToArray();
             }
             // All except G7
             pkstr = pkstr.Substring(pkstr.IndexOf("#", StringComparison.Ordinal) + 1); // Trim URL
@@ -151,10 +141,10 @@ namespace PKHeX.WinForms
             }
             catch
             {
-                if (DialogResult.Yes != WinFormsUtil.Prompt(MessageBoxButtons.YesNo, MsgQRUrlFailConnection, MsgQRClipboardUrl))
+                if (DialogResult.Yes != WinFormsUtil.Prompt(MessageBoxButtons.YesNo, "Unable to connect to the internet to receive QR code.", "Copy QR URL to Clipboard?"))
                     return null;
                 try { Clipboard.SetText(webURL); }
-                catch { WinFormsUtil.Alert(MsgClipboardFailWrite); }
+                catch { WinFormsUtil.Alert("Failed to set text to Clipboard"); }
             }
             return null;
         }
@@ -180,7 +170,6 @@ namespace PKHeX.WinForms
             byte[] data = QR7.GenerateQRData(pk7, box, slot, num_copies);
             return GenerateQRCode(data, ppm: 4);
         }
-
         private static Image GenerateQRCode(byte[] data, int ppm = 4)
         {
             using (var generator = new QRCodeGenerator())
@@ -193,8 +182,10 @@ namespace PKHeX.WinForms
         {
             switch (format)
             {
-                case 6: return QR6Path;
-                default: return QR6PathBad;
+                case 6:
+                    return QR6Path;
+                default:
+                    return QR6PathBad;
             }
         }
     }

@@ -56,7 +56,6 @@ namespace PKHeX.Core
                     return CalcSlot(ESV, H_Regular);
             }
         }
-
         private static int KSlot(SlotType type, uint rand)
         {
             var ESV = rand % 100;
@@ -85,7 +84,6 @@ namespace PKHeX.Core
                     return CalcSlot(ESV, H_Regular);
             }
         }
-
         private static int JSlot(SlotType type, uint rand)
         {
             uint ESV = rand / 656;
@@ -147,39 +145,37 @@ namespace PKHeX.Core
 
             return slot.LevelMin + adjust;
         }
-
         public static bool GetIsEncounterable(EncounterSlot slot, FrameType frameType, int rand, LeadRequired lead)
         {
             if (slot.Type.IsSweetScentType())
                 return true;
             return true; // todo
-            //return GetCanEncounter(slot, frameType, rand, lead);
+            return GetCanEncounter(slot, frameType, rand, lead);
         }
-
         private static bool GetCanEncounter(EncounterSlot slot, FrameType frameType, int rand, LeadRequired lead)
         {
             int proc = frameType == FrameType.MethodJ ? rand / 656 : rand % 100;
-            if ((slot.Type & SlotType.Rock_Smash) != 0)
+            if (slot.Type.HasFlag(SlotType.Rock_Smash))
                 return proc < 60;
             if (frameType == FrameType.MethodH)
                 return true; // fishing encounters are disjointed by the hooked message.
 
             // fishing
-            if ((slot.Type & SlotType.Old_Rod) != 0)
+            if (slot.Type.HasFlag(SlotType.Old_Rod))
             {
                 if (proc < 25)
                     return true;
                 if (proc < 50)
                     return lead == LeadRequired.None;
             }
-            else if ((slot.Type & SlotType.Good_Rod) != 0)
+            else if (slot.Type.HasFlag(SlotType.Good_Rod))
             {
                 if (proc < 50)
                     return true;
                 if (proc < 75 && lead == LeadRequired.None)
                     return lead == LeadRequired.None;
             }
-            else if ((slot.Type & SlotType.Super_Rod) != 0)
+            else if (slot.Type.HasFlag(SlotType.Super_Rod))
             {
                 if (proc < 75)
                     return true;

@@ -23,7 +23,6 @@ namespace PKHeX.WinForms
                 return null;
             }
         }
-
         public static Image GetImageFromURL(string webURL)
         {
             try

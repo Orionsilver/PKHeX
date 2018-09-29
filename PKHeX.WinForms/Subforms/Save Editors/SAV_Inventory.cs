@@ -3,7 +3,6 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using PKHeX.Core;
-using static PKHeX.Core.MessageStrings;
 
 namespace PKHeX.WinForms
 {
@@ -11,19 +10,16 @@ namespace PKHeX.WinForms
     {
         private readonly SaveFile Origin;
         private readonly SaveFile SAV;
-
         public SAV_Inventory(SaveFile sav)
         {
+            SAV = (Origin = sav).Clone();
             InitializeComponent();
             WinFormsUtil.TranslateInterface(this, Main.CurrentLanguage);
-            SAV = (Origin = sav).Clone();
-            itemlist = GameInfo.Strings.GetItemStrings(SAV.Generation, SAV.Version).ToArray();
+            itemlist = GameInfo.Strings.GetItemStrings(SAV.Generation, SAV.Version);
 
             for (int i = 0; i < itemlist.Length; i++)
-            {
-                if (string.IsNullOrEmpty(itemlist[i]))
+                if (itemlist[i] == "")
                     itemlist[i] = $"(Item #{i:000})";
-            }
 
             HasFreeSpace = SAV.Generation == 7;
             HasNew = CHK_NEW.Visible = SAV.Generation == 7;
@@ -43,7 +39,6 @@ namespace PKHeX.WinForms
         {
             Close();
         }
-
         private void B_Save_Click(object sender, EventArgs e)
         {
             SetBags();
@@ -68,7 +63,6 @@ namespace PKHeX.WinForms
                 tabControl1.TabPages[i].Controls.Add(GetDGV(Pouches[i]));
             }
         }
-
         private DataGridView GetDGV(InventoryPouch pouch)
         {
             // Add DataGrid
@@ -115,7 +109,7 @@ namespace PKHeX.WinForms
 
             dgv.Columns.Add(dgvItemVal);
             dgv.Columns.Add(dgvIndex);
-
+            
             if (HasFreeSpace)
             {
                 DataGridViewCheckBoxColumn dgvFree = new DataGridViewCheckBoxColumn
@@ -151,7 +145,6 @@ namespace PKHeX.WinForms
 
             return dgv;
         }
-
         private void GetBags()
         {
             foreach (InventoryPouch pouch in Pouches)
@@ -163,16 +156,18 @@ namespace PKHeX.WinForms
                 var outOfBounds = invalid.Where(item => item.Index >= itemlist.Length).ToArray();
                 var incorrectPouch = invalid.Where(item => item.Index < itemlist.Length).ToArray();
 
-                if (outOfBounds.Length > 0)
-                    WinFormsUtil.Error(MsgItemPouchUnknown, $"Item ID(s): {string.Join(", ", outOfBounds.Select(item => item.Index))}");
-                if (!Main.HaX && incorrectPouch.Length > 0)
-                    WinFormsUtil.Alert(string.Format(MsgItemPouchRemoved, pouch.Type), string.Join(", ", incorrectPouch.Select(item => itemlist[item.Index])), MsgItemPouchWarning);
+                if (outOfBounds.Any())
+                    WinFormsUtil.Error("Unknown item detected.",
+                        $"Item ID(s): {string.Join(", ", outOfBounds.Select(item => item.Index))}");
+                if (!Main.HaX && incorrectPouch.Any())
+                    WinFormsUtil.Alert($"The following item(s) have been removed from {pouch.Type} pouch.",
+                        string.Join(", ", incorrectPouch.Select(item => itemlist[item.Index])), 
+                        "If you save changes, the item(s) will no longer be in the pouch.");
 
                 pouch.Sanitize(Main.HaX, itemlist.Length - 1);
                 GetBag(dgv, pouch);
             }
         }
-
         private void SetBags()
         {
             foreach (InventoryPouch t in Pouches)
@@ -181,7 +176,6 @@ namespace PKHeX.WinForms
                 SetBag(dgv, t);
             }
         }
-
         private void GetBag(DataGridView dgv, InventoryPouch pouch)
         {
             for (int i = 0; i < dgv.Rows.Count; i++)
@@ -195,7 +189,6 @@ namespace PKHeX.WinForms
                     dgv.Rows[i].Cells[c].Value = pouch.Items[i].New;
             }
         }
-
         private void SetBag(DataGridView dgv, InventoryPouch pouch)
         {
             int ctr = 0;
@@ -224,11 +217,9 @@ namespace PKHeX.WinForms
                         itemcnt = 2;
                     else
                         itemcnt = pouch.MaxCount; // Cap at pouch maximum
-                }
+                }   
                 else if (itemcnt <= 0 && !HasNew)
-                {
                     continue; // ignore item
-                }
 
                 pouch.Items[ctr] = new InventoryItem { Index = itemindex, Count = itemcnt };
                 if (HasFreeSpace)
@@ -245,7 +236,18 @@ namespace PKHeX.WinForms
         {
             int index = tabControl1.SelectedIndex;
             var pouch = Pouches[index];
-            NUD_Count.Maximum = GetMax(SAV, pouch, Main.HaX);
+            if (Main.HaX)
+            {
+                // Cap at absolute maximum
+                if (SAV.Generation <= 2)
+                    NUD_Count.Maximum = byte.MaxValue;
+                else if (SAV.Generation >= 7)
+                    NUD_Count.Maximum = pouch.MaxCount;
+                else // if (SAV.Generation >= 3)
+                    NUD_Count.Maximum = ushort.MaxValue;
+            }
+            else
+                NUD_Count.Maximum = pouch.MaxCount;
 
             bool disable = pouch.Type == InventoryType.PCItems || pouch.Type == InventoryType.FreeSpace;
             NUD_Count.Visible = L_Count.Visible = B_GiveAll.Visible = !disable;
@@ -262,23 +264,8 @@ namespace PKHeX.WinForms
             NUD_Count.Value = Math.Max(1, pouch.MaxCount - 4);
         }
 
-        private static int GetMax(ITrainerInfo sav, InventoryPouch pouch, bool haX)
-        {
-            if (haX)
-                return pouch.MaxCount;
-
-            // Cap at absolute maximum
-            if (sav.Generation <= 2)
-                return byte.MaxValue;
-            if (sav.Generation >= 7)
-                return pouch.MaxCount;
-            // if (SAV.Generation >= 3)
-            return ushort.MaxValue;
-        }
-
         // Initialize String Tables
         private readonly string[] itemlist;
-
         private string[] GetItems(ushort[] items, bool sort = true)
         {
             string[] res = new string[items.Length + 1];
@@ -292,13 +279,11 @@ namespace PKHeX.WinForms
 
         // User Cheats
         private int CurrentPouch => tabControl1.SelectedIndex;
-
         private void B_GiveAll_Click(object sender, EventArgs e)
         {
             Button btn = (Button)sender;
             giveMenu.Show(btn.PointToScreen(new Point(0, btn.Height)));
         }
-
         private void GiveAllItems(object sender, EventArgs e)
         {
             // Get Current Pouch
@@ -310,8 +295,8 @@ namespace PKHeX.WinForms
             bool resize = legalitems.Length > p.Items.Length;
             if (resize)
             {
-                var dr = WinFormsUtil.Prompt(MessageBoxButtons.YesNo, MsgItemPouchSizeSmall,
-                    string.Format(MsgItemPouchRandom, Environment.NewLine));
+                var dr = WinFormsUtil.Prompt(MessageBoxButtons.YesNo, "Pouch is too small for all items.",
+                    "Yes: Give by Item ID" + Environment.NewLine + "No: Random assortment");
                 if (dr == DialogResult.Cancel)
                     return;
                 if (dr == DialogResult.No)
@@ -336,8 +321,7 @@ namespace PKHeX.WinForms
                 int l = 0;
                 dgv.Rows[i].Cells[l++].Value = itemname;
                 dgv.Rows[i].Cells[l++].Value = c;
-
-                var t = Array.Find(p.Items, m => m.Index == item);
+                var t = p.Items.FirstOrDefault(m => m.Index == item);
 
                 if (HasFreeSpace)
                     dgv.Rows[i].Cells[l++].Value = t?.FreeSpace ?? false;
@@ -346,7 +330,6 @@ namespace PKHeX.WinForms
             }
             System.Media.SystemSounds.Asterisk.Play();
         }
-
         private static bool IsItemCount1(ushort item, SaveFile sav)
         {
             switch (sav.Generation)
@@ -361,7 +344,6 @@ namespace PKHeX.WinForms
                     return new[] {420, 421, 422, 423, 423, 424, 425, 426, 427, 737}.Contains(item);
             }
         }
-
         private void RemoveAllItems(object sender, EventArgs e)
         {
             // Get Current Pouch
@@ -370,7 +352,7 @@ namespace PKHeX.WinForms
                 return;
 
             DataGridView dgv = Controls.Find(DGVPrefix + Pouches[pouch].Type, true).FirstOrDefault() as DataGridView;
-
+            
             for (int i = 0; i < dgv.RowCount; i++)
             {
                 int c = 0;
@@ -381,9 +363,8 @@ namespace PKHeX.WinForms
                 if (HasNew)
                     dgv.Rows[i].Cells[c].Value = false;
             }
-            WinFormsUtil.Alert(MsgItemCleared);
+            WinFormsUtil.Alert("Items cleared.");
         }
-
         private void ModifyAllItems(object sender, EventArgs e)
         {
             // Get Current Pouch
@@ -399,16 +380,15 @@ namespace PKHeX.WinForms
                 int itemindex = Array.IndexOf(itemlist, item);
                 if (itemindex > 0)
                     dgv.Rows[i].Cells[1].Value = IsItemCount1((ushort)itemindex, SAV) ? 1 : NUD_Count.Value;
-            }
-            WinFormsUtil.Alert(MsgItemPouchCountUpdated);
-        }
 
+            }
+            WinFormsUtil.Alert("Item count modified.");
+        }
         private void B_Sort_Click(object sender, EventArgs e)
         {
             Button btn = (Button)sender;
             sortMenu.Show(btn.PointToScreen(new Point(0, btn.Height)));
         }
-
         private void SortByName(object sender, EventArgs e)
         {
             int pouch = CurrentPouch;
@@ -421,7 +401,6 @@ namespace PKHeX.WinForms
                 p.SortByName(itemlist, reverse:true);
             GetBag(dgv, p);
         }
-
         private void SortByCount(object sender, EventArgs e)
         {
             int pouch = CurrentPouch;
@@ -434,7 +413,6 @@ namespace PKHeX.WinForms
                 p.SortByCount(reverse:true);
             GetBag(dgv, p);
         }
-
         private void SortByIndex(object sender, EventArgs e)
         {
             int pouch = CurrentPouch;

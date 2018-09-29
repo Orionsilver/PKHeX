@@ -41,8 +41,6 @@ namespace PKHeX.Core
                 case GameVersion.MN: return GetEncounterTables("sm", "mn");
                 case GameVersion.US: return GetEncounterTables("uu", "us");
                 case GameVersion.UM: return GetEncounterTables("uu", "um");
-                case GameVersion.GP: return GetEncounterTables("gg", "gp");
-                case GameVersion.GE: return GetEncounterTables("gg", "ge");
             }
             return null; // bad request
         }
@@ -82,12 +80,9 @@ namespace PKHeX.Core
         internal static void MarkEncountersStaticMagnetPull(IEnumerable<EncounterArea> Areas, PersonalTable t)
         {
             foreach (EncounterArea Area in Areas)
-            {
-                foreach (var grp in Area.Slots.GroupBy(z => z.Type))
-                    MarkEncountersStaticMagnetPull(grp, t);
-            }
+            foreach (var grp in Area.Slots.GroupBy(z => z.Type))
+                MarkEncountersStaticMagnetPull(grp, t);
         }
-
         internal static void MarkEncountersStaticMagnetPull(IEnumerable<EncounterSlot> grp, PersonalTable t)
         {
             GetStaticMagnet(t, grp, out List<EncounterSlot> s, out List<EncounterSlot> m);
@@ -104,7 +99,6 @@ namespace PKHeX.Core
                 slot.Permissions.MagnetPullCount = m.Count;
             }
         }
-
         internal static void MarkEncountersStaticMagnetPullPermutation(IEnumerable<EncounterSlot> grp, PersonalTable t, List<EncounterSlot> permuted)
         {
             GetStaticMagnet(t, grp, out List<EncounterSlot> s, out List<EncounterSlot> m);
@@ -143,7 +137,6 @@ namespace PKHeX.Core
                 slot.Permissions.MagnetPullCount = m.Count;
             }
         }
-
         private static void GetStaticMagnet(PersonalTable t, IEnumerable<EncounterSlot> grp, out List<EncounterSlot> s, out List<EncounterSlot> m)
         {
             const int steel = (int)MoveType.Steel;
@@ -152,10 +145,10 @@ namespace PKHeX.Core
             m = new List<EncounterSlot>();
             foreach (EncounterSlot Slot in grp)
             {
-                var p = t[Slot.Species];
-                if (p.IsType(steel))
+                var types = t[Slot.Species].Types;
+                if (types[0] == steel || types[1] == steel)
                     m.Add(Slot);
-                if (p.IsType(electric))
+                if (types[0] == electric || types[1] == electric)
                     s.Add(Slot);
             }
         }
@@ -169,10 +162,8 @@ namespace PKHeX.Core
         internal static void MarkEncountersVersion(IEnumerable<EncounterArea> Areas, GameVersion Version)
         {
             foreach (EncounterArea Area in Areas)
-            {
-                foreach (var Slot in Area.Slots)
-                    Slot.Version = Version;
-            }
+            foreach (var Slot in Area.Slots.OfType<EncounterSlot1>())
+                Slot.Version = Version;
         }
 
         /// <summary>
@@ -194,12 +185,9 @@ namespace PKHeX.Core
         internal static void MarkEncountersGeneration(int Generation, params IEnumerable<EncounterArea>[] Areas)
         {
             foreach (var table in Areas)
-            {
-                foreach (var area in table)
-                    MarkEncountersGeneration(Generation, area.Slots);
-            }
+            foreach (var area in table)
+                MarkEncountersGeneration(Generation, area.Slots);
         }
-
         private static void MarkEncountersGeneration(int Generation, IEnumerable<IGeneration> Encounters)
         {
             foreach (IGeneration enc in Encounters)
@@ -220,70 +208,18 @@ namespace PKHeX.Core
             }).ToArray();
         }
 
-        internal static T[] ConcatAll<T>(params IEnumerable<T>[] arr) => arr.SelectMany(z => z).ToArray();
+        internal static T[] ConcatAll<T>(params T[][] arr) => arr.SelectMany(z => z).ToArray();
 
         internal static void MarkEncounterAreaArray(params EncounterArea[][] areas)
         {
             foreach (var area in areas)
                 MarkEncounterAreas(area);
         }
-
-        private static void MarkEncounterAreas(params EncounterArea[] areas)
+        internal static void MarkEncounterAreas(params EncounterArea[] areas)
         {
             foreach (var area in areas)
-            {
-                foreach (var slot in area.Slots)
-                    slot.Area = area;
-            }
-        }
-
-        internal static EncounterStatic Clone(this EncounterStatic s, int location)
-        {
-            var result = s.Clone();
-            result.Location = location;
-            return result;
-        }
-
-        internal static EncounterStatic[] Clone(this EncounterStatic s, int[] locations)
-        {
-            EncounterStatic[] Encounters = new EncounterStatic[locations.Length];
-            for (int i = 0; i < locations.Length; i++)
-                Encounters[i] = s.Clone(locations[i]);
-            return Encounters;
-        }
-
-        internal static IEnumerable<EncounterStatic> DreamRadarClone(this EncounterStatic s)
-        {
-            for (int i = 0; i < 8; i++)
-                yield return s.DreamRadarClone((5 * i) + 5);  // Level from 5->40 depends on the number of badges
-        }
-
-        private static EncounterStatic DreamRadarClone(this EncounterStatic s, int level)
-        {
-            var result = s.Clone(level);
-            result.Level = level;
-            result.Location = 30015;// Pokemon Dream Radar
-            result.Gift = true;     // Only
-            result.Ball = 25;       // Dream Ball
-            return result;
-        }
-
-        internal static void MarkEncounterTradeStrings(EncounterTrade[] table, string[][] strings)
-        {
-            int half = strings[1].Length / 2;
-            for (var i = 0; i < half; i++)
-            {
-                var t = table[i];
-                t.Nicknames = getNames(i, strings);
-                t.TrainerNames = getNames(i + half, strings);
-            }
-            string[] getNames(int i, IEnumerable<string[]> names) => names?.Select(z => z?.Length > i ? z[i] : null).ToArray();
-        }
-
-        internal static void MarkEncounterGame(IEnumerable<IVersion> table, GameVersion version)
-        {
-            foreach (var t in table.Where(z => z.Version == GameVersion.Any))
-                t.Version = version;
+            foreach (var slot in area.Slots)
+                slot.Area = area;
         }
     }
 }

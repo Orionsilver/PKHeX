@@ -14,7 +14,6 @@
         {
             nameof(IRibbonSetCommon3.RibbonChampionG3Hoenn), nameof(IRibbonSetCommon3.RibbonArtist), nameof(IRibbonSetCommon3.RibbonEffort)
         };
-
         internal static bool[] RibbonBits(this IRibbonSetCommon3 set)
         {
             if (set == null)
@@ -26,7 +25,6 @@
                 set.RibbonEffort,
             };
         }
-
-        internal static string[] RibbonNames(this IRibbonSetCommon3 _) => RibbonSetNamesCommon3;
+        internal static string[] RibbonNames(this IRibbonSetCommon3 set) => RibbonSetNamesCommon3;
     }
 }

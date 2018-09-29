@@ -5,20 +5,14 @@
     /// </summary>
     public class CheckResult
     {
-        public Severity Judgement { get; }
-        public CheckIdentifier Identifier { get; }
-        public string Comment { get; internal set; }
-
+        internal readonly Severity Judgement = Severity.Valid;
+        internal string Comment = LegalityCheckStrings.V;
         public bool Valid => Judgement >= Severity.Fishy;
         public string Rating => Judgement.Description();
+        public bool Flag;
+        internal readonly CheckIdentifier Identifier;
 
-        internal CheckResult(CheckIdentifier i)
-        {
-            Judgement = Severity.Valid;
-            Comment = LegalityCheckStrings.L_AValid;
-            Identifier = i;
-        }
-
+        internal CheckResult(CheckIdentifier i) { Identifier = i; }
         internal CheckResult(Severity s, string c, CheckIdentifier i)
         {
             Judgement = s;

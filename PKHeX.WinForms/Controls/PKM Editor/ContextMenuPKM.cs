@@ -5,7 +5,10 @@ namespace PKHeX.WinForms.Controls
 {
     public partial class ContextMenuPKM : UserControl
     {
-        public ContextMenuPKM() => InitializeComponent();
+        public ContextMenuPKM()
+        {
+            InitializeComponent();
+        }
 
         public event EventHandler RequestEditorLegality;
         public event EventHandler RequestEditorQR;

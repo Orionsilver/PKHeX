@@ -10,29 +10,33 @@ namespace PKHeX.WinForms
     {
         private readonly SaveFile Origin;
         private readonly SAV7 SAV;
-
         public SAV_Trainer7(SaveFile sav)
         {
-            InitializeComponent();
-            WinFormsUtil.TranslateInterface(this, Main.CurrentLanguage);
             SAV = (SAV7)(Origin = sav).Clone();
             Loading = true;
+            InitializeComponent();
             if (Main.Unicode)
-            {
-                try { TB_OTName.Font = FontUtil.GetPKXFont(11); }
-                catch (Exception e) { WinFormsUtil.Alert("Font loading failed...", e.ToString()); }
-            }
+            try { TB_OTName.Font = FontUtil.GetPKXFont(11); }
+            catch (Exception e) { WinFormsUtil.Alert("Font loading failed...", e.ToString()); }
 
+            WinFormsUtil.TranslateInterface(this, Main.CurrentLanguage);
             B_MaxCash.Click += (sender, e) => MT_Money.Text = "9,999,999";
 
             CB_Gender.Items.Clear();
             CB_Gender.Items.AddRange(Main.GenderSymbols.Take(2).ToArray()); // m/f depending on unicode selection
-
+            
             GetComboBoxes();
             GetTextBoxes();
 
-            TrainerStats.LoadRecords(SAV, Records.RecordList_7);
-            TrainerStats.GetToolTipText = UpdateTip;
+            CB_Stats.Items.Clear();
+            for (int i = 0; i < 200; i++)
+            {
+                if (!RecordList.TryGetValue(i, out string name))
+                    name = $"{i:D3}";
+
+                CB_Stats.Items.Add(name);
+            }
+            CB_Stats.SelectedIndex = RecordList.First().Key;
             CB_Fashion.SelectedIndex = 1;
 
             if (SAV.USUM)
@@ -43,13 +47,15 @@ namespace PKHeX.WinForms
             Loading = false;
         }
 
+        private readonly ToolTip Tip1 = new ToolTip(), Tip2 = new ToolTip(), Tip3 = new ToolTip();
         private readonly bool Loading;
         private bool MapUpdated;
+        private bool editing;
 
         private static readonly string[] TrainerStampTitle = { "01:Official Pokemon Trainer", "02:Melemele Trial Completion", "03:Akala Trial Completion", "04:Ula'ula Trial Completion", "05:Poni Trial Completion", "06:Island Challenge Completion", "07:Melemele Pokedex Completion", "08:Akala Pokedex Completion", "09:Ula'ula Pokedex Completion", "10:Poni Pokedex Completion", "11:Alola Pokedex Completion", "12:50 Consecutive Single Battle Wins", "13:50 Consecutive Double Battle Wins", "14:50 Consecutive Multi Battle Wins", "15:Poke Finder Pro" };
         private static readonly string[] BattleStyles = { "Normal", "Elegant", "Girlish", "Reverent", "Smug", "Left-handed", "Passionate", "Idol" };
         private int[] FlyDestFlagOfs, MapUnmaskFlagOfs;
-        private int SkipFlag => SAV.USUM ? 4160 : 3200; // FlagMax - 768
+        private int skipFlag => SAV.USUM ? 4160 : 3200; // FlagMax - 768
 
         private void GetComboBoxes()
         {
@@ -62,21 +68,38 @@ namespace PKHeX.WinForms
                     new { Text = "TW", Value = 6 }
                 };
 
+            var language_list = new[] {
+                    new { Text = "ENG", Value = 2 },
+                    new { Text = "JPN", Value = 1 },
+                    new { Text = "FRE", Value = 3 },
+                    new { Text = "ITA", Value = 4 },
+                    new { Text = "GER", Value = 5 },
+                    new { Text = "SPA", Value = 7 },
+                    new { Text = "KOR", Value = 8 },
+                    new { Text = "CHS", Value = 9 },
+                    new { Text = "CHT", Value = 10},
+                };
+
             var alolatime_list = new[] { new { Text = "Sun Time", Value = 24*60*60 } };
             Array.Resize(ref alolatime_list, 24);
             for (int i = 1; i < 24; i++)
                 alolatime_list[i] = new {Text = $"+{i:00} Hours", Value = i*60*60};
             alolatime_list[12] = new {Text = "Moon Time", Value = 12 * 60 * 60};
 
-            CB_3DSReg.InitializeBinding();
+            CB_3DSReg.DisplayMember = "Text";
+            CB_3DSReg.ValueMember = "Value";
             CB_3DSReg.DataSource = dsregion_list;
-            CB_Language.InitializeBinding();
-            CB_Language.DataSource = GameInfo.LanguageDataSource(SAV.Generation);
-            CB_AlolaTime.InitializeBinding();
+            CB_Language.DisplayMember = "Text";
+            CB_Language.ValueMember = "Value";
+            CB_Language.DataSource = language_list;
+            CB_AlolaTime.DisplayMember = "Text";
+            CB_AlolaTime.ValueMember = "Value";
             CB_AlolaTime.DataSource = alolatime_list;
 
-            CB_Country.InitializeBinding();
-            CB_Region.InitializeBinding();
+            CB_Country.DisplayMember = "Text";
+            CB_Country.ValueMember = "Value";
+            CB_Region.DisplayMember = "Text";
+            CB_Region.ValueMember = "Value";
             Main.SetCountrySubRegion(CB_Country, "countries");
 
             CB_SkinColor.Items.Clear();
@@ -88,8 +111,9 @@ namespace PKHeX.WinForms
             }
 
             L_Vivillon.Text = GameInfo.Strings.specieslist[666] + ":";
-            CB_Vivillon.InitializeBinding();
-            CB_Vivillon.DataSource = PKX.GetFormList(666, GameInfo.Strings.types, GameInfo.Strings.forms, Main.GenderSymbols, SAV.Generation).ToList();
+            CB_Vivillon.DisplayMember = "Text";
+            CB_Vivillon.ValueMember = "Value";
+            CB_Vivillon.DataSource = PKX.GetFormList(666, GameInfo.Strings.types, GameInfo.Strings.forms, Main.GenderSymbols).ToList();
 
             var styles = new List<string>(BattleStyles);
             if (SAV.USUM)
@@ -104,7 +128,6 @@ namespace PKHeX.WinForms
             foreach (string t in TrainerStampTitle)
                 LB_Stamps.Items.Add(t);
         }
-
         private void GetTextBoxes()
         {
             // Get Data
@@ -115,7 +138,10 @@ namespace PKHeX.WinForms
 
             // Display Data
             TB_OTName.Text = OT_NAME;
-            trainerID1.LoadIDValues(SAV);
+
+            MT_TID.Text = SAV.TID.ToString("00000");
+            MT_SID.Text = SAV.SID.ToString("00000");
+            MT_G7TID.Text = SAV.TrainerID7.ToString("000000");
             MT_Money.Text = SAV.Money.ToString();
 
             CB_Country.SelectedValue = SAV.Country;
@@ -201,7 +227,8 @@ namespace PKHeX.WinForms
             if (SAV.SM)
                 LoadThrowTypeLists();
             else
-                CB_BallThrowTypeListMode.Visible = LB_BallThrowTypeLearned.Visible = LB_BallThrowTypeUnlocked.Visible = false;
+                CB_BallThrowTypeListMode.Visible = LB_BallThrowTypeLearned.Visible =
+                    LB_BallThrowTypeUnlocked.Visible = false;
 
             uint stampBits = SAV.Stamps;
             for (int i = 0; i < LB_Stamps.Items.Count; i++)
@@ -235,7 +262,7 @@ namespace PKHeX.WinForms
 
         private void LoadMapFlyToData()
         {
-            IReadOnlyList<ComboItem> metLocationList = GameInfo.GetLocationList(GameVersion.US, 7, false);
+            List<ComboItem> metLocationList = GameInfo.GetLocationList(GameVersion.US, 7, false);
             int[] FlyDestNameIndex = {
                 -1,24,34,8,20,38,12,46,40,30,//Melemele
                 70,68,78,86,74,104,82,58,90,72,76,92,62,//Akala
@@ -265,7 +292,7 @@ namespace PKHeX.WinForms
                     FlyDestNameIndex[i] < 0
                     ? FlyDestAltName[u++]
                     : metLocationList.First(v => v.Value == FlyDestNameIndex[i]).Text
-                    , SAV.GetEventFlag(SkipFlag + FlyDestFlagOfs[i])
+                    , SAV.GetEventFlag(skipFlag + FlyDestFlagOfs[i])
                 );
             }
             int[] MapUnmaskNameIndex = {
@@ -292,11 +319,10 @@ namespace PKHeX.WinForms
                     MapUnmaskNameIndex[i] < 0
                     ? MapUnmaskAltName[u++]
                     : metLocationList.First(v => v.Value == MapUnmaskNameIndex[i]).Text
-                    , SAV.GetEventFlag(SkipFlag + MapUnmaskFlagOfs[i])
+                    , SAV.GetEventFlag(skipFlag + MapUnmaskFlagOfs[i])
                 );
             }
         }
-
         private void LoadUltraData()
         {
             NUD_Surf0.Value = SAV.GetSurfScore(0);
@@ -306,7 +332,6 @@ namespace PKHeX.WinForms
             TB_RotomOT.Font = TB_OTName.Font;
             TB_RotomOT.Text = SAV.RotomOT;
         }
-
         private void Save()
         {
             SaveTrainerInfo();
@@ -326,12 +351,13 @@ namespace PKHeX.WinForms
             if (SAV.USUM)
                 SaveUltraData();
         }
-
         private void SaveTrainerInfo()
         {
             SAV.Game = (byte)(CB_Game.SelectedIndex + 30);
             SAV.Gender = (byte)CB_Gender.SelectedIndex;
-
+            
+            SAV.TID = (ushort)Util.ToUInt32(MT_TID.Text);
+            SAV.SID = (ushort)Util.ToUInt32(MT_SID.Text);
             SAV.Money = Util.ToUInt32(MT_Money.Text);
             SAV.SubRegion = WinFormsUtil.GetIndex(CB_Region);
             SAV.Country = WinFormsUtil.GetIndex(CB_Country);
@@ -351,12 +377,12 @@ namespace PKHeX.WinForms
                 SAV.Y = (float)NUD_Y.Value;
                 SAV.R = (float)NUD_R.Value;
             }
-
+            
             // Save PlayTime
             SAV.PlayedHours = ushort.Parse(MT_Hours.Text);
             SAV.PlayedMinutes = ushort.Parse(MT_Minutes.Text)%60;
             SAV.PlayedSeconds = ushort.Parse(MT_Seconds.Text)%60;
-
+            
             int seconds = (int)(CAL_AdventureStartDate.Value - new DateTime(2000, 1, 1)).TotalSeconds;
             seconds -= seconds%86400;
             seconds += (int)(CAL_AdventureStartTime.Value - new DateTime(2000, 1, 1)).TotalSeconds;
@@ -373,7 +399,6 @@ namespace PKHeX.WinForms
             SAV.BP = (uint)NUD_BP.Value;
             SAV.FestaCoins = (uint)NUD_FC.Value;
         }
-
         private void SavePokeFinder()
         {
             SAV.PokeFinderSnapCount = (uint)NUD_SnapCount.Value;
@@ -383,7 +408,6 @@ namespace PKHeX.WinForms
             SAV.PokeFinderCameraVersion = (ushort)CB_CameraVersion.SelectedIndex;
             SAV.PokeFinderGyroFlag = CHK_Gyro.Checked;
         }
-
         private void SaveBattleTree()
         {
             SAV.SetTreeStreak((int)NUD_RCStreak0.Value, 0, super:false, max:false);
@@ -400,7 +424,6 @@ namespace PKHeX.WinForms
             SAV.SetTreeStreak((int)NUD_SMStreak1.Value, 1, super:true, max:true);
             SAV.SetTreeStreak((int)NUD_SMStreak2.Value, 2, super:true, max:true);
         }
-
         private void SaveTrainerAppearance()
         {
             // Skin changed && (gender matches || override)
@@ -409,13 +432,10 @@ namespace PKHeX.WinForms
             string gStr = CB_Gender.Items[gender].ToString();
             string sStr = CB_Gender.Items[skin].ToString();
 
-            if (SAV.DressUpSkinColor == CB_SkinColor.SelectedIndex)
-                return;
-
-            if (SAV.Gender == skin || DialogResult.Yes == WinFormsUtil.Prompt(MessageBoxButtons.YesNo, $"Gender-Skin mismatch:{Environment.NewLine}Gender: {gStr}, Skin: {sStr}", "Save selected Skin Color?"))
-                SAV.DressUpSkinColor = CB_SkinColor.SelectedIndex;
+            if (SAV.DressUpSkinColor != CB_SkinColor.SelectedIndex && 
+                (SAV.Gender == skin || DialogResult.Yes == WinFormsUtil.Prompt(MessageBoxButtons.YesNo, $"Gender-Skin mismatch:{Environment.NewLine}Gender: {gStr}, Skin: {sStr}", "Save selected Skin Color?")))
+                    SAV.DressUpSkinColor = CB_SkinColor.SelectedIndex;
         }
-
         private void SaveThrowType()
         {
             if (CB_BallThrowType.SelectedIndex >= 0)
@@ -431,7 +451,6 @@ namespace PKHeX.WinForms
             for (int i = 1; i < BattleStyles.Length; i++)
                 SAV.SetEventFlag(learnedStart + i, LB_BallThrowTypeLearned.GetSelected(i));
         }
-
         private void SaveFlags()
         {
             SAV.Stamps = GetBits(LB_Stamps);
@@ -444,11 +463,10 @@ namespace PKHeX.WinForms
             SAV.ZMoveUnlocked = CHK_UnlockZMove.Checked;
 
             for (int i = 0; i < CLB_FlyDest.Items.Count; i++)
-                SAV.SetEventFlag(SkipFlag + FlyDestFlagOfs[i], CLB_FlyDest.GetItemChecked(i));
+                SAV.SetEventFlag(skipFlag + FlyDestFlagOfs[i], CLB_FlyDest.GetItemChecked(i));
             for (int i = 0; i < CLB_MapUnmask.Items.Count; i++)
-                SAV.SetEventFlag(SkipFlag + MapUnmaskFlagOfs[i], CLB_MapUnmask.GetItemChecked(i));
+                SAV.SetEventFlag(skipFlag + MapUnmaskFlagOfs[i], CLB_MapUnmask.GetItemChecked(i));
         }
-
         private void SaveUltraData()
         {
             SAV.SetSurfScore(0, (int)NUD_Surf0.Value);
@@ -460,23 +478,17 @@ namespace PKHeX.WinForms
                 && TB_OTName.Text != SAV.OT // manually changed
                 && DialogResult.Yes == // wants to update
                 WinFormsUtil.Prompt(MessageBoxButtons.YesNo, "Rotom OT does not match OT name. Update Rotom OT name with OT name?"))
-            {
                 SAV.RotomOT = TB_OTName.Text;
-            }
             else
-            {
                 SAV.RotomOT = TB_RotomOT.Text;
-            }
         }
 
         private static uint GetBits(ListBox listbox)
         {
             uint bits = 0;
             for (int i = 0; i < listbox.Items.Count; i++)
-            {
                 if (listbox.GetSelected(i))
                     bits |= (uint)(1 << i);
-            }
             return bits;
         }
 
@@ -491,46 +503,51 @@ namespace PKHeX.WinForms
             d.ShowDialog();
             tb.Text = d.FinalString;
         }
+        private void ShowTSV(object sender, EventArgs e)
+        {
+            SAV.TID = (ushort)Util.ToUInt32(MT_TID.Text);
+            SAV.SID = (ushort)Util.ToUInt32(MT_SID.Text);
+            int tsv = (SAV.TID ^ SAV.SID) >> 4;
+            string IDstr = $"TSV: {tsv:0000}";
+            if (SAV.Generation > 6) // always true for G7
+                IDstr += Environment.NewLine + $"G7TID: {SAV.TrainerID7:000000}";
+            Tip1.SetToolTip(MT_TID, IDstr);
+            Tip2.SetToolTip(MT_SID, IDstr);
+        }
 
         private void B_Cancel_Click(object sender, EventArgs e)
         {
             Close();
         }
-
         private void B_Save_Click(object sender, EventArgs e)
         {
             Save();
             Origin.SetData(SAV.Data, 0);
             Close();
         }
-
         private void Change255(object sender, EventArgs e)
         {
-            MaskedTextBox box = (MaskedTextBox)sender;
-            if (box.Text.Length == 0) box.Text = "0";
+            MaskedTextBox box = sender as MaskedTextBox;
+            if (box?.Text == "") box.Text = "0";
             if (Util.ToInt32(box.Text) > 255) box.Text = "255";
         }
-
         private void ChangeFFFF(object sender, EventArgs e)
         {
-            MaskedTextBox box = (MaskedTextBox)sender;
-            if (box.Text.Length == 0) box.Text = "0";
+            MaskedTextBox box = sender as MaskedTextBox;
+            if (box?.Text == "") box.Text = "0";
             if (Util.ToInt32(box.Text) > 65535) box.Text = "65535";
         }
-
         private void ChangeMapValue(object sender, EventArgs e)
         {
             if (!Loading)
                 MapUpdated = true;
         }
-
         private void UpdateCountry(object sender, EventArgs e)
         {
             int index;
             if (sender is ComboBox c && (index = WinFormsUtil.GetIndex(c)) > 0)
                 Main.SetCountrySubRegion(CB_Region, $"sr_{index:000}");
         }
-
         private void B_Fashion_Click(object sender, EventArgs e)
         {
             var prompt = WinFormsUtil.Prompt(MessageBoxButtons.YesNo, "Modifying Fashion Items will clear existing fashion unlock data.", "Continue?");
@@ -539,7 +556,7 @@ namespace PKHeX.WinForms
 
             // Clear Block
             new byte[SAV.FashionLength].CopyTo(SAV.Data, SAV.Fashion);
-
+            
             // Write Payload
             // Every fashion item is 2 bits, New Flag (high) & Owned Flag (low)
 
@@ -576,8 +593,26 @@ namespace PKHeX.WinForms
             }
             System.Media.SystemSounds.Asterisk.Play();
         }
+        private void ChangeStat(object sender, EventArgs e)
+        {
+            editing = true;
+            int index = CB_Stats.SelectedIndex;
+            NUD_Stat.Maximum = SAV7.GetRecordMax(index);
+            NUD_Stat.Value = SAV.GetRecord(index);
 
-        private string UpdateTip(int index)
+            int offset = SAV.GetRecordOffset(index);
+            L_Offset.Text = $"Offset: 0x{offset:X3}";
+            UpdateTip(index, true);
+            editing = false;
+        }
+        private void ChangeStatVal(object sender, EventArgs e)
+        {
+            if (editing) return;
+            int index = CB_Stats.SelectedIndex;
+            SAV.SetRecord(index, (int)NUD_Stat.Value);
+            UpdateTip(index, false);
+        }
+        private void UpdateTip(int index, bool updateStats)
         {
             switch (index)
             {
@@ -585,21 +620,26 @@ namespace PKHeX.WinForms
                     int seconds = (int)(CAL_AdventureStartDate.Value - new DateTime(2000, 1, 1)).TotalSeconds;
                     seconds -= seconds % 86400;
                     seconds += (int)(CAL_AdventureStartTime.Value - new DateTime(2000, 1, 1)).TotalSeconds;
-                    return ConvertDateValueToString(SAV.GetRecord(index), seconds);
+                    Tip3.SetToolTip(NUD_Stat, ConvertDateValueToString(SAV.GetRecord(index), seconds));
+                    break;
                 default:
-                    return null;
+                    Tip3.RemoveAll();
+                    break;
             }
-        }
+            if (!updateStats)
+                return;
 
-        private static string ConvertDateValueToString(int value, int secondsBias = -1)
+            if (RecordList.TryGetValue(index, out string tip))
+                Tip3.SetToolTip(CB_Stats, tip);
+        }
+        private static string ConvertDateValueToString(int value, int refval = -1)
         {
-            const int spd = 86400; // seconds per day
-            string tip = string.Empty;
-            if (value >= spd)
-                tip += (value / spd) + "d ";
+            string tip = "";
+            if (value >= 86400)
+                tip += value / 86400 + "d ";
             tip += new DateTime(0).AddSeconds(value).ToString("HH:mm:ss");
-            if (secondsBias >= 0)
-                tip += Environment.NewLine + $"Date: {new DateTime(2000, 1, 1).AddSeconds(value + secondsBias)}";
+            if (refval >= 0)
+                tip += Environment.NewLine + $"Date: {new DateTime(2000, 1, 1).AddSeconds(refval + value)}";
             return tip;
         }
 
@@ -616,14 +656,12 @@ namespace PKHeX.WinForms
                 LB_BallThrowTypeLearned.Visible = true;
             }
         }
-
         private void UpdateBallThrowTypeLearned(object sender, EventArgs e)
         {
             if (Loading) return;
             if (!LB_BallThrowTypeLearned.GetSelected(0))
                 LB_BallThrowTypeLearned.SetSelected(0, true);
         }
-
         private void UpdateBallThrowTypeUnlocked(object sender, EventArgs e)
         {
             if (Loading) return;
@@ -633,17 +671,179 @@ namespace PKHeX.WinForms
                     LB_BallThrowTypeUnlocked.SetSelected(i, true);
             }
         }
-
         private void B_AllFlyDest_Click(object sender, EventArgs e)
         {
             for (int i = 0; i < CLB_FlyDest.Items.Count; i++)
                 CLB_FlyDest.SetItemChecked(i, true);
         }
-
         private void B_AllMapUnmask_Click(object sender, EventArgs e)
         {
             for (int i = 0; i < CLB_MapUnmask.Items.Count; i++)
                 CLB_MapUnmask.SetItemChecked(i, true);
         }
+
+        private void B_GenTID_Click(object sender, EventArgs e)
+        {
+            var tuple = SaveUtil.GetTIDSID(Util.ToUInt32(MT_G7TID.Text), ModifierKeys == Keys.Control);
+            MT_TID.Text = tuple.Item1.ToString("D5");
+            MT_SID.Text = tuple.Item2.ToString("D5");
+        }
+
+        private readonly Dictionary<int, string> RecordList = new Dictionary<int, string>
+        {
+            {000, "Steps Taken"},
+            {001, "Times Saved"},
+            {002, "Storyline Completed Time"},
+            {003, "Total Battles"},
+            {004, "Wild Pokémon Battles"},
+            {005, "Trainer Battles"},
+            {006, "Pokemon Caught"},
+            {007, "Pokemon Caught Fishing"},
+            {008, "Eggs Hatched"},
+            {009, "Pokémon Evolved"},
+            {010, "Pokémon Healed at Pokémon Centers"},
+            {011, "Link Trades"},
+            {012, "Link Battles"},
+            {013, "Link Battle Wins"},
+            {014, "Link Battle Losses"},
+            {015, "Battle Spot Battles"},
+            {016, "Battle Spot Wins"},
+            {017, "Battle Spot Losses"},
+            {018, "Mart Stack Purchases"},
+            {019, "Money Spent"},
+            {020, "Pokémon deposited at Nursery"},
+            {021, "Pokémon Defeated"},
+            {022, "Exp. Points Collected (Highest)"},
+            {023, "Exp. Points Collected (Today)"},
+            {024, "Deposited in the GTS"},
+            {025, "Nicknames Given"},
+            {026, "Bonus Premier Balls Received"},
+            {027, "Battle Points Earned"},
+            {028, "Battle Points Spent"},
+            {029, "Super Effective Moves Used"},
+            {031, "Salon Uses"},
+            {032, "Berry Harvests"},
+            {033, "Trades at the GTS"},
+            {034, "Wonder Trades"},
+            {035, "Quick Links"},
+            {036, "Pokemon Rides"},
+            {037, "Beans Given"},
+            {038, "Festival Coins Spent"},
+            {039, "Poke Beans Collected"},
+            {040, "Battle Tree Challenges"},
+            {041, "Z-Moves Used"},
+            {042, "Balls Used"},
+            {044, "Moves Used"},
+            {046, "Ran From Battles"},
+            {047, "Rock Smash Items"},
+            {048, "Medicine Used"},
+            {050, "Total Thumbs-Ups"},
+            {051, "Times Twirled (Pirouette)"},
+            {052, "Record Thumbs-ups"},
+            {053, "Pokemon Petted"},
+            {054, "Poké Pelago Visits"},
+            {055, "Poké Bean Trades"},
+            {056, "Poké Pelago Tapped Pokémon"},
+            {057, "Poké Pelago Bean Stacks put in Crate"},
+            {063, "Battle Videos Watched"},
+            {064, "Battle Videos Rebattled"},
+            {065, "RotomDex Interactions"},
+            {066, "Guests Interacted With"},
+            {067, "Berry Piles (not full) Collected"},
+            {068, "Berry Piles (full) Collected"},
+            {069, "Items Reeled In"},
+            // USUM
+            {070, "Roto Lotos"},
+            {072, "Stickers Collected"},
+            {073, "Mantine Surf BP Earned"},
+            {074, "Battle Agency Wins"},
+
+            {100, "Champion Title Defense"},
+            {104, "Moves used with No Effect"},
+            {105, "Own Fainted Pokémon"},
+            {107, "Failed Run Attempts"},
+            {110, "Pokemon Defeated (Highest)"},
+            {111, "Pokemon Defeated (Today)"},
+            {112, "Pokemon Caught (Highest)"},
+            {113, "Pokemon Caught (Today)"},
+            {114, "Trainers Battled (Highest)"},
+            {115, "Trainers Battled (Today)"},
+            {116, "Pokemon Evolved (Highest)"},
+            {117, "Pokemon Evolved (Today)"},
+            {118, "Fossils Restored"},
+            {119, "Photos Rated"},
+            {120, "Best (Super) Singles Streak"},
+            {121, "Best (Super) Doubles Streak"},
+            {122, "Best (Super) Multi Streak"},
+            {123, "Loto-ID Wins"},
+            {124, "PP Raised"},
+            {127, "Shiny Pokemon Encountered"},
+            {128, "Missions Participated In"},
+            {129, "Facilities Hosted"},
+            {130, "QR Code Scans"},
+            {131, "Moves learned with TMs"},
+            {132, "Café Drinks Bought"},
+            {133, "Trainer Card Photos Taken"},
+            {134, "Evolutions Cancelled"},
+            {135, "SOS Battle Allies Called"},
+            {137, "Battle Royal Dome Battles"},
+            {138, "Items Picked Up after Battle"},
+            {139, "Ate in Malasadas Shop"},
+            {141, "Dishes eaten in Battle Buffet"},
+            {142, "Pokémon Refresh Accessed"},
+            {143, "Pokémon Storage System Log-outs"},
+            {144, "Lomi Lomi Massages"},
+            {145, "Times laid down in Ilima's Bed"},
+            {146, "Times laid down in Guzma's Bed"},
+            {147, "Times laid down in Kiawe's Bed"},
+            {148, "Times laid down in Lana's Bed"},
+            {149, "Times laid down in Mallow's Bed"},
+            {150, "Times laid down in Olivia's Bed"},
+            {151, "Times laid down in Hapu's Bed"},
+            {152, "Times laid down in Lusamine's Bed"},
+            {153, "Ambush/Smash post-battle items received"},
+            {154, "Rustling Tree Encounters"},
+            {155, "Ledges Jumped Down"},
+            {156, "Water Splash Encounters"},
+            {157, "Sand Cloud Encounters"},
+            {158, "Outfit Changes"},
+            {159, "Battle Royal Dome Wins"},
+            {160, "Pelago Treasure Hunts"},
+            {161, "Pelago Training Sessions"},
+            {162, "Pelago Hot Spring Sessions"},
+            {165, "Special QR Code Scans"},
+            {166, "Island Scans"},
+            {167, "Rustling Bush Encounters"},
+            {168, "Fly Shadow Encounters"},
+            {169, "Rustling Grass Encounters"},
+            {170, "Dirt Cloud Encounters"},
+            {171, "Wimpod Chases"},
+            {172, "Berry Tree Battles won"},
+            {173, "Bubbling Spot Encounters/Items"},
+            {174, "Times laid down in Own Bed"},
+
+            {175, "Trade Pokémon at the GTS!"},
+            {176, "176 - Global Mission"},
+            {177, "Hatch a lot of Eggs!"},
+            {178, "Harvest Poké Beans!"},
+            {179, "179 - Global Mission"},
+            {180, "Find Pokémon using Island Scan!"},
+            {181, "181 - Global Mission"},
+            {182, "Defend your Champion title!"},
+            {183, "Fish Pokémon at rare spots!"},
+            {185, "Try your luck!"},
+            {186, "186 - Global Mission"},
+            {187, "Catch a lot of Pokémon!"},
+
+            // USUM
+            {188, "Ultra Wormhole Travels"},
+            {189, "Mantine Surf Plays"},
+            {190, "Photo Club Photos saved"},
+            {191, "Battle Agency Battles"},
+            {195, "Photo Club Sticker usage"},
+            {196, "Photo Club Photo Shoots"},
+            {197, "Highest Wormhole Travel Distance"},
+            {198, "Highest Mantine Surf BP Earned"},
+        };
     }
 }

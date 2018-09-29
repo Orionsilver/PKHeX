@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Windows.Forms;
 using PKHeX.Core;
 
@@ -8,12 +9,11 @@ namespace PKHeX.WinForms
     {
         private readonly SaveFile Origin;
         private readonly SAV4 SAV;
-
         public SAV_Underground(SaveFile sav)
         {
+            SAV = (SAV4)(Origin = sav).Clone();
             InitializeComponent();
             WinFormsUtil.TranslateInterface(this, Main.CurrentLanguage);
-            SAV = (SAV4)(Origin = sav).Clone();
 
             GetUGScores();
         }
@@ -48,5 +48,6 @@ namespace PKHeX.WinForms
         }
 
         private void B_Cancel_Click(object sender, EventArgs e) => Close();
+
     }
 }

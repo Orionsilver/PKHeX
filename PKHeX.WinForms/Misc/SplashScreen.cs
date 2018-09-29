@@ -14,7 +14,10 @@ namespace PKHeX.WinForms
                 while (!Main.IsInitialized)
                     Thread.Sleep(50);
 
-                Invoke((MethodInvoker)Close);
+                if (InvokeRequired)
+                    try { Invoke((MethodInvoker)Close); }
+                    catch { Close(); }
+                else Close();
             }).Start();
         }
     }

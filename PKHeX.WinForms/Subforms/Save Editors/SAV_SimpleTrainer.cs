@@ -9,13 +9,12 @@ namespace PKHeX.WinForms
     {
         private readonly SaveFile Origin;
         private readonly SaveFile SAV;
-
         public SAV_SimpleTrainer(SaveFile sav)
         {
-            InitializeComponent();
-            WinFormsUtil.TranslateInterface(this, Main.CurrentLanguage);
             SAV = (Origin = sav).Clone();
             Loading = true;
+            InitializeComponent();
+            WinFormsUtil.TranslateInterface(this, Main.CurrentLanguage);
 
             cba = new[] {CHK_1, CHK_2, CHK_3, CHK_4, CHK_5, CHK_6, CHK_7, CHK_8};
             TB_OTName.MaxLength = SAV.OTLength;
@@ -63,8 +62,6 @@ namespace PKHeX.WinForms
                 CB_TextSpeed.SelectedIndex = sav1.TextSpeed;
 
                 MT_PikaFriend.Text = sav1.PikaFriendship.ToString();
-                if (!SAV.Version.Contains(GameVersion.YW))
-                    MT_PikaFriend.Visible = false;
             }
 
             if (SAV is SAV2 sav2)
@@ -91,7 +88,12 @@ namespace PKHeX.WinForms
             if (SAV is SAV3 sav3)
             {
                 GB_Map.Visible = false;
-                badgeval = sav3.Badges;
+                switch (sav3.Version)
+                {
+                    case GameVersion.E: badgeval = sav3.Badges; break;
+                    case GameVersion.FRLG: badgeval = sav3.Badges; break;
+                    default: GB_Badges.Visible = false; break; // RS
+                }
 
                 L_Started.Visible = L_Fame.Visible = false;
                 CAL_AdventureStartDate.Visible = CAL_HoFDate.Visible = false;
@@ -155,22 +157,20 @@ namespace PKHeX.WinForms
 
             Loading = false;
         }
-
         private readonly CheckBox[] cba;
         private readonly bool Loading;
         private bool MapUpdated;
 
         private void ChangeFFFF(object sender, EventArgs e)
         {
-            MaskedTextBox box = (MaskedTextBox)sender;
-            if (box.Text.Length == 0) box.Text = "0";
+            MaskedTextBox box = sender as MaskedTextBox;
+            if (box.Text == "") box.Text = "0";
             if (Util.ToInt32(box.Text) > 65535) box.Text = "65535";
         }
-
         private void Change255(object sender, EventArgs e)
         {
-            MaskedTextBox box = (MaskedTextBox)sender;
-            if (box.Text.Length == 0) box.Text = "0";
+            MaskedTextBox box = sender as MaskedTextBox;
+            if (box.Text == "") box.Text = "0";
             if (Util.ToInt32(box.Text) > byte.MaxValue) box.Text = "255";
         }
 
@@ -254,12 +254,10 @@ namespace PKHeX.WinForms
             Origin.SetData(SAV.Data, 0);
             Close();
         }
-
         private void B_Cancel_Click(object sender, EventArgs e)
         {
             Close();
         }
-
         private static int GetSeconds(DateTimePicker date, DateTimePicker time)
         {
             int val = (int)(date.Value - new DateTime(2000, 1, 1)).TotalSeconds;
@@ -267,7 +265,6 @@ namespace PKHeX.WinForms
             val += (int)(time.Value - new DateTime(2000, 1, 1)).TotalSeconds;
             return val;
         }
-
         private void ChangeMapValue(object sender, EventArgs e)
         {
             if (!Loading)
