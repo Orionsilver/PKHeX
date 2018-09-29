@@ -26,8 +26,8 @@ namespace PKHeX.Core
                 ? SeedInfo.GetSeedsUntilUnownForm(pidiv, info, pk.AltForm)
                 : SeedInfo.GetSeedsUntilNature(pidiv, info);
 
-            var frames = pidiv.Type == PIDType.CuteCharm 
-                ? FilterCuteCharm(seeds, pidiv, info) 
+            var frames = pidiv.Type == PIDType.CuteCharm
+                ? FilterCuteCharm(seeds, pidiv, info)
                 : FilterNatureSync(seeds, pidiv, info);
 
             var refined = RefineFrames(frames, info);
@@ -75,6 +75,7 @@ namespace PKHeX.Core
                     yield return frame;
             }
         }
+
         private static IEnumerable<Frame> GenerateLeadSpecificFrames3(Frame f, FrameGenerator info)
         {
             // Check leads -- none in list if leads are not allowed
@@ -177,6 +178,7 @@ namespace PKHeX.Core
                     yield return frame;
             }
         }
+
         private static IEnumerable<Frame> GenerateLeadSpecificFrames4(Frame f, FrameGenerator info)
         {
             LeadRequired lead;
@@ -300,6 +302,7 @@ namespace PKHeX.Core
                 }
             }
         }
+
         private static bool IsValidPokeBlockNature(uint seed, uint nature, out uint natureOrigin)
         {
             if (nature % 6 == 0) // neutral
@@ -335,7 +338,7 @@ namespace PKHeX.Core
                 natures[i] = natures[j];
                 natures[j] = temp;
             }
-            
+
             var likes = Pokeblock.GetLikedBlockFlavor(nature);
             // best case scenario is a perfect flavored pokeblock for the nature.
             // has liked flavor, and all other non-disliked flavors are present.

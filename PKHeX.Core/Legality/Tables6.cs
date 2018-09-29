@@ -100,10 +100,10 @@ namespace PKHeX.Core
         {
                  216, 431, 442, 445, 446, 447, 450, 465, 466, 471, 628,
             629, 631, 632, 638, 641, 642, 643, 689, 695, 696, 697, 698,
-            700, 701, 702, 703, 705, 706, 707, 712, 713, 714,
+            700, 701, 702, 703, 705, 712, 713, 714,
 
             // Illegal
-            716, 717, // For the cheaters who want useless items... 
+            // 716, 717, 706, 707,
         };
 
         internal static readonly ushort[] Pouch_Key_AO =
@@ -112,16 +112,17 @@ namespace PKHeX.Core
             629, 631, 632, 638, 697,
 
             // Illegal
-            716, 717, 745, 746, 747, 748, 749, 750, // For the cheaters who want useless items...
+            // 716, 717, 723, 745, 746, 747, 748, 749, 750, 766,
 
             // ORAS
             457, 474, 503,
 
             718, 719,
-            720, 721, 722, 723, 724, 725, 726, 727, 728, 729,
+            720, 721, 722,      724, 725, 726, 727, 728, 729,
             730, 731, 732, 733, 734, 735, 736, 738, 739,
             740, 741, 742, 743, 744,
-            751, 765, 766, 771, 772, 774, 775,
+            751,
+            765, 771, 772, 774, 775,
         };
 
         internal static readonly ushort[] Pouch_TMHM_XY =
@@ -226,8 +227,9 @@ namespace PKHeX.Core
         };
 
         #endregion
-        
+
         internal static readonly int[] EggLocations6 = {60002, 30002};
+
         internal static readonly HashSet<int> ValidMet_XY = new HashSet<int>
         {
             006, 008, 009, 010, 012, 013, 014, 016, 017, 018, 020, 021, 022, 024, 026, 028, 029, 030, 032, 034, 035, 036,
@@ -236,14 +238,16 @@ namespace PKHeX.Core
             100, 101, 102, 103, 104, 106, 108, 110, 112, 114, 116, 118, 120, 122, 124, 126, 128, 130, 132, 134, 135, 136,
             138, 140, 142, 144, 146, 148, 150, 152, 154, 156, 158, 160, 162, 164, 166, 168
         };
+
         internal static readonly HashSet<int> ValidMet_AO = new HashSet<int>
         {
             170, 172, 174, 176, 178, 180, 182, 184, 186, 188, 190, 192, 194, 196, 198,
             200, 202, 204, 206, 208, 210, 212, 214, 216, 218, 220, 222, 224, 226, 228, 230, 232, 234, 236, 238, 240, 242,
             244, 246, 248, 250, 252, 254, 256, 258, 260, 262, 264, 266, 268, 270, 272, 274, 276, 278, 280, 282, 284, 286,
             288, 290, 292, 294, 296, 298, 300, 302, 304, 306, 308, 310, 312, 314, 316, 318, 320, 322, 324, 326, 328, 330,
-            332, 334, 336, 338, 340, 342, 344, 346, 348, 350, 352, 354
+            332, 334, 336, 338, 340, 342, 344, 346,      350, 352, 354
         };
+
         internal static readonly HashSet<int> FriendSafari = new HashSet<int>
         {
             190, 206, 216, 506, 294, 352, 531, 572, 113, 132, 133, 235,
@@ -265,6 +269,7 @@ namespace PKHeX.Core
             082, 303, 597, 205, 227, 375, 600, 437, 530, 707,
             098, 224, 400, 515, 008, 130, 195, 419, 061, 184, 657
         };
+
         internal static readonly int[] CosplayPikachuMoves = { 309, 556, 577, 604, 560, 0 };
         internal static readonly HashSet<int> WildPokeballs6 = new HashSet<int> {0x01, 0x02, 0x03, 0x04, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F};
 
@@ -288,9 +293,10 @@ namespace PKHeX.Core
         internal static readonly HashSet<int> Inherit_Sport = new HashSet<int>
         {
             010, 013, 046, 048, 123, 127, 265, 290, 314, 401, 415,
-            
+
             313, // Via Illumise
         };
+
         internal static readonly HashSet<int> Inherit_Safari = new HashSet<int>
         {
             016, 019, 020, 021, 022, 023, 024, 025, 027, 029, 035, 039, 041,
@@ -318,6 +324,7 @@ namespace PKHeX.Core
 
             287, // Via Vigoroth
         };
+
         internal static readonly HashSet<int> Inherit_Dream = new HashSet<int>
         {
             010, 013, 016, 019, 021, 023, 027, 029, 037, 041, 043, 046, 048, 050, 052, 054, 056, 058, 060, 063, 066, 069,
@@ -347,6 +354,7 @@ namespace PKHeX.Core
             // Via Incense Breeding
             298, 360, 406, 433, 438, 439, 440, 446, 458,
         };
+
         internal static readonly HashSet<int> Ban_DreamHidden = new HashSet<int>
         {
             311, // Plusle
@@ -358,6 +366,7 @@ namespace PKHeX.Core
             356, // Dusclops
             477, // Dusknoir
         };
+
         internal static readonly HashSet<int> Ban_Gen3Ball = new HashSet<int>
         {
             252, 255, 258, //1 - Treeko, Torchic, Mudkip
@@ -371,6 +380,7 @@ namespace PKHeX.Core
             497, 500, 503, //3
             566, 567, 696, 697, 698, 699 // Fossil Only obtain
         };
+
         internal static readonly HashSet<int> Ban_Gen3BallHidden = new HashSet<int>
         {
             // can have HA and can be in gen 3 ball as eggs but can not at same time.
@@ -386,6 +396,7 @@ namespace PKHeX.Core
             710 + (3 << 11), //Pumpkaboo-Super
             711 + (3 << 11), //Gourgeist-Super
         };
+
         internal static readonly HashSet<int> Ban_Gen4Ball_6 = new HashSet<int>
         {
             152, 155, 158, //1 - Chikorita, Cyndaquil, Totodile
@@ -409,99 +420,25 @@ namespace PKHeX.Core
             268, 269, // Cascoon Dustox
         };
         #endregion
-        #region Memory Table
-        internal static readonly int[] Memory_NotXY =
-        {
-            65, // {0} was with {1} when (he/she) built a Secret Base. {4} that {3}.
-            66, // {0} participated in a contest with {1} and impressed many people. {4} that {3}.
-            67, // {0} participated in a contest with {1} and won the title. {4} that {3}.
-            68, // {0} soared through the sky with {1} and went to many different places. {4} that {3}.
-            69, // {1} asked {0} to dive. Down it went, deep into the ocean, to explore the bottom of the sea. {4} that {3}.
-        };
-        internal static readonly int[] Memory_NotAO =
-        {
-            11, // {0} went clothes shopping with {1}. {4} that {3}.
-            43, // {0} was impressed by the speed of the train it took with {1}. {4} that {3}.
-            44, // {0} encountered {2} with {1} using the Poké Radar. {4} that {3}.
-            56, // {0} was with {1} when (he/she) went to a boutique and tried on clothes, but (he/she) left the boutique without buying anything. {4} that {3}.
-            57, // {0} went to a nice restaurant with {1} and ate until it got totally full. {4} that {3}.
-            62, // {0} saw itself in a mirror in a mirror cave that it went to with {1}. {4} that {3}.
-        };
-        internal static readonly int[][] MoveSpecificMemories =
-        {
-            new[] {
-                20, // {0} surfed across the water, carrying {1} on its back. {4} that {3}.
-                24, // {0} flew, carrying {1} on its back, to {2}. {4} that {3}.
-                35, // {0} proudly used Strength at {1}’s instruction in... {2}. {4} that {3}.
-                36, // {0} proudly used Cut at {1}’s instruction in... {2}. {4} that {3}.
-                37, // {0} shattered rocks to its heart’s content at {1}’s instruction in... {2}. {4} that {3}.
-                38, // {0} used Waterfall while carrying {1} on its back in... {2}. {4} that {3}.
-                69, // {1} asked {0} to dive. Down it went, deep into the ocean, to explore the bottom of the sea. {4} that {3}.
-            },
-            new[] { 57, 19, 70, 15, 249, 127, 291}, // Move IDs
-        };
-        internal static readonly int[][] LocationsWithPKCenter =
-        {
-            new[] {
-                // Kalos locations with a PKMN CENTER
-                18,  // Santalune City
-                22,  // Lumiose City
-                30,  // Camphrier Town
-                40,  // Cyllage City
-                44,  // Ambrette Town
-                52,  // Geosenge Towny
-                58,  // Shalour City
-                64,  // Coumarine City
-                70,  // Laverre City
-                76,  // Dendemille Town
-                86,  // Anistar City
-                90,  // Couriway Town
-                94,  // Snowbelle City
-                106, // Pokémon League (X/Y)
-                // Hoenn locations with a PKMN CENTER
-                172, // Oldale Town
-                174, // Dewford Town
-                176, // Lavaridge Town
-                178, // Fallarbor Town
-                180, // Verdanturf Town
-                182, // Pacifidlog Town
-                184, // Petalburg City
-                186, // Slateport City
-                188, // Mauville City
-                190, // Rustboro City
-                192, // Fortree City
-                194, // Lilycove City
-                196, // Mossdeep City
-                198, // Sootopolis City
-                200, // Ever Grande City
-                202, // Pokémon League (OR/AS)
-            },
-            new[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, // Region matching
-        };
-        public static readonly HashSet<int> MemoryGeneral = new HashSet<int> { 1, 2, 3, 4, 19, 24, 31, 32, 33, 35, 36, 37, 38, 39, 42, 52, 59 };
-        public static readonly HashSet<int> MemorySpecific = new HashSet<int> { 6 };
-        public static readonly HashSet<int> MemoryMove = new HashSet<int> { 12, 16, 48, 49 };
-        public static readonly HashSet<int> MemoryItem = new HashSet<int> { 5, 15, 26, 34, 40, 51 };
-        public static readonly HashSet<int> MemorySpecies = new HashSet<int> { 7, 9, 13, 14, 17, 21, 18, 25, 29, 44, 45, 50, 60 };
-        #endregion
 
         internal static readonly int[] MovePP_XY =
         {
-            00, 
-            35, 25, 10, 15, 20, 20, 15, 15, 15, 35, 30, 05, 10, 20, 30, 35, 35, 20, 15, 20, 20, 25, 20, 30, 05, 10, 15, 15, 15, 25, 20, 05, 35, 15, 20, 20, 10, 15, 30, 35, 20, 20, 30, 25, 40, 20, 15, 20, 20, 20, 
-            30, 25, 15, 30, 25, 05, 15, 10, 05, 20, 20, 20, 05, 35, 20, 25, 20, 20, 20, 15, 25, 15, 10, 20, 25, 10, 35, 30, 15, 10, 40, 10, 15, 30, 15, 20, 10, 15, 10, 05, 10, 10, 25, 10, 20, 40, 30, 30, 20, 20, 
-            15, 10, 40, 15, 10, 30, 10, 20, 10, 40, 40, 20, 30, 30, 20, 30, 10, 10, 20, 05, 10, 30, 20, 20, 20, 05, 15, 15, 20, 10, 15, 35, 20, 15, 10, 10, 30, 15, 40, 20, 15, 10, 05, 10, 30, 10, 15, 20, 15, 40, 
-            20, 10, 05, 15, 10, 10, 10, 15, 30, 30, 10, 10, 20, 10, 01, 01, 10, 25, 10, 05, 15, 25, 15, 10, 15, 30, 05, 40, 15, 10, 25, 10, 30, 10, 20, 10, 10, 10, 10, 10, 20, 05, 40, 05, 05, 15, 05, 10, 05, 10, 
-            10, 10, 10, 20, 20, 40, 15, 10, 20, 20, 25, 05, 15, 10, 05, 20, 15, 20, 25, 20, 05, 30, 05, 10, 20, 40, 05, 20, 40, 20, 15, 35, 10, 05, 05, 05, 15, 05, 20, 05, 05, 15, 20, 10, 05, 05, 15, 10, 15, 15, 
-            10, 10, 10, 20, 10, 10, 10, 10, 15, 15, 15, 10, 20, 20, 10, 20, 20, 20, 20, 20, 10, 10, 10, 20, 20, 05, 15, 10, 10, 15, 10, 20, 05, 05, 10, 10, 20, 05, 10, 20, 10, 20, 20, 20, 05, 05, 15, 20, 10, 15, 
-            20, 15, 10, 10, 15, 10, 05, 05, 10, 15, 10, 05, 20, 25, 05, 40, 15, 05, 40, 15, 20, 20, 05, 15, 20, 20, 15, 15, 05, 10, 30, 20, 30, 15, 05, 40, 15, 05, 20, 05, 15, 25, 25, 15, 20, 15, 20, 15, 20, 10, 
-            20, 20, 05, 05, 10, 05, 40, 10, 10, 05, 10, 10, 15, 10, 20, 15, 30, 10, 20, 05, 10, 10, 15, 10, 10, 05, 15, 05, 10, 10, 30, 20, 20, 10, 10, 05, 05, 10, 05, 20, 10, 20, 10, 15, 10, 20, 20, 20, 15, 15, 
-            10, 15, 15, 15, 10, 10, 10, 20, 10, 30, 05, 10, 15, 10, 10, 05, 20, 30, 10, 30, 15, 15, 15, 15, 30, 10, 20, 15, 10, 10, 20, 15, 05, 05, 15, 15, 05, 10, 05, 20, 05, 15, 20, 05, 20, 20, 20, 20, 10, 20, 
-            10, 15, 20, 15, 10, 10, 05, 10, 05, 05, 10, 05, 05, 10, 05, 05, 05, 15, 10, 10, 10, 10, 10, 10, 15, 20, 15, 10, 15, 10, 15, 10, 20, 10, 15, 10, 20, 20, 20, 20, 20, 15, 15, 15, 15, 15, 15, 20, 15, 10, 
-            15, 15, 15, 15, 10, 10, 10, 10, 10, 15, 15, 15, 15, 05, 05, 15, 05, 10, 10, 10, 20, 20, 20, 10, 10, 30, 15, 15, 10, 15, 25, 10, 15, 10, 10, 10, 20, 10, 10, 10, 10, 10, 15, 15, 05, 05, 10, 10, 10, 05, 
-            05, 10, 05, 05, 15, 10, 05, 05, 05, 10, 10, 10, 10, 20, 25, 10, 20, 30, 25, 20, 20, 15, 20, 15, 20, 20, 10, 10, 10, 10, 10, 20, 10, 30, 15, 10, 10, 10, 20, 20, 05, 05, 05, 20, 10, 10, 20, 15, 20, 20, 
+            00,
+            35, 25, 10, 15, 20, 20, 15, 15, 15, 35, 30, 05, 10, 20, 30, 35, 35, 20, 15, 20, 20, 25, 20, 30, 05, 10, 15, 15, 15, 25, 20, 05, 35, 15, 20, 20, 10, 15, 30, 35, 20, 20, 30, 25, 40, 20, 15, 20, 20, 20,
+            30, 25, 15, 30, 25, 05, 15, 10, 05, 20, 20, 20, 05, 35, 20, 25, 20, 20, 20, 15, 25, 15, 10, 20, 25, 10, 35, 30, 15, 10, 40, 10, 15, 30, 15, 20, 10, 15, 10, 05, 10, 10, 25, 10, 20, 40, 30, 30, 20, 20,
+            15, 10, 40, 15, 10, 30, 10, 20, 10, 40, 40, 20, 30, 30, 20, 30, 10, 10, 20, 05, 10, 30, 20, 20, 20, 05, 15, 15, 20, 10, 15, 35, 20, 15, 10, 10, 30, 15, 40, 20, 15, 10, 05, 10, 30, 10, 15, 20, 15, 40,
+            20, 10, 05, 15, 10, 10, 10, 15, 30, 30, 10, 10, 20, 10, 01, 01, 10, 25, 10, 05, 15, 25, 15, 10, 15, 30, 05, 40, 15, 10, 25, 10, 30, 10, 20, 10, 10, 10, 10, 10, 20, 05, 40, 05, 05, 15, 05, 10, 05, 10,
+            10, 10, 10, 20, 20, 40, 15, 10, 20, 20, 25, 05, 15, 10, 05, 20, 15, 20, 25, 20, 05, 30, 05, 10, 20, 40, 05, 20, 40, 20, 15, 35, 10, 05, 05, 05, 15, 05, 20, 05, 05, 15, 20, 10, 05, 05, 15, 10, 15, 15,
+            10, 10, 10, 20, 10, 10, 10, 10, 15, 15, 15, 10, 20, 20, 10, 20, 20, 20, 20, 20, 10, 10, 10, 20, 20, 05, 15, 10, 10, 15, 10, 20, 05, 05, 10, 10, 20, 05, 10, 20, 10, 20, 20, 20, 05, 05, 15, 20, 10, 15,
+            20, 15, 10, 10, 15, 10, 05, 05, 10, 15, 10, 05, 20, 25, 05, 40, 15, 05, 40, 15, 20, 20, 05, 15, 20, 20, 15, 15, 05, 10, 30, 20, 30, 15, 05, 40, 15, 05, 20, 05, 15, 25, 25, 15, 20, 15, 20, 15, 20, 10,
+            20, 20, 05, 05, 10, 05, 40, 10, 10, 05, 10, 10, 15, 10, 20, 15, 30, 10, 20, 05, 10, 10, 15, 10, 10, 05, 15, 05, 10, 10, 30, 20, 20, 10, 10, 05, 05, 10, 05, 20, 10, 20, 10, 15, 10, 20, 20, 20, 15, 15,
+            10, 15, 15, 15, 10, 10, 10, 20, 10, 30, 05, 10, 15, 10, 10, 05, 20, 30, 10, 30, 15, 15, 15, 15, 30, 10, 20, 15, 10, 10, 20, 15, 05, 05, 15, 15, 05, 10, 05, 20, 05, 15, 20, 05, 20, 20, 20, 20, 10, 20,
+            10, 15, 20, 15, 10, 10, 05, 10, 05, 05, 10, 05, 05, 10, 05, 05, 05, 15, 10, 10, 10, 10, 10, 10, 15, 20, 15, 10, 15, 10, 15, 10, 20, 10, 15, 10, 20, 20, 20, 20, 20, 15, 15, 15, 15, 15, 15, 20, 15, 10,
+            15, 15, 15, 15, 10, 10, 10, 10, 10, 15, 15, 15, 15, 05, 05, 15, 05, 10, 10, 10, 20, 20, 20, 10, 10, 30, 15, 15, 10, 15, 25, 10, 15, 10, 10, 10, 20, 10, 10, 10, 10, 10, 15, 15, 05, 05, 10, 10, 10, 05,
+            05, 10, 05, 05, 15, 10, 05, 05, 05, 10, 10, 10, 10, 20, 25, 10, 20, 30, 25, 20, 20, 15, 20, 15, 20, 20, 10, 10, 10, 10, 10, 20, 10, 30, 15, 10, 10, 10, 20, 20, 05, 05, 05, 20, 10, 10, 20, 15, 20, 20,
             10, 20, 30, 10, 10, 40, 40, 30, 20, 40, 20, 20, 10, 10, 10, 10, 05, 10, 10, 05, 05,
         };
+
         internal static readonly int[] UnreleasedItems_6 =
         {
             005, // Safari Ball
@@ -540,6 +477,7 @@ namespace PKHeX.Core
             590, // Relic Crown
             715, // Fairy Gem
         };
+
         internal static readonly bool[] ReleasedHeldItems_6 = Enumerable.Range(0, MaxItemID_6_AO+1).Select(i => HeldItem_AO.Contains((ushort)i) && !UnreleasedItems_6.Contains(i)).ToArray();
     }
 }

@@ -1,4 +1,6 @@
-﻿namespace PKHeX.Core
+﻿using System;
+
+namespace PKHeX.Core
 {
     /// <summary>
     /// Invalid Encounter Data
@@ -19,5 +21,7 @@
             LevelMax = pkm.CurrentLevel;
             EggEncounter = pkm.WasEgg;
         }
+
+        public PKM ConvertToPKM(ITrainerInfo SAV) => throw new ArgumentException($"Cannot convert an {nameof(EncounterInvalid)} to PKM.");
     }
 }

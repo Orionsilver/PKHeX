@@ -10,9 +10,11 @@ namespace PKHeX.WinForms
     {
         private readonly G1OverworldSpawner Overworld;
         private void SAV_EventReset1_FormClosing(object sender, FormClosingEventArgs e) => Overworld.Save();
+
         public SAV_EventReset1(SaveFile sav)
         {
             InitializeComponent();
+            WinFormsUtil.TranslateInterface(this, Main.CurrentLanguage);
             Overworld = new G1OverworldSpawner((SAV1)sav);
 
             InitializeButtons();
@@ -32,7 +34,7 @@ namespace PKHeX.WinForms
                 var b = new Button
                 {
                     Text = pkmname, Enabled = pair.IsDespawned,
-                    Size = new Size(Width / 2 - 25, 22),
+                    Size = new Size((Width / 2) - 25, 22),
                 };
                 b.Click += (s, e) =>
                 {

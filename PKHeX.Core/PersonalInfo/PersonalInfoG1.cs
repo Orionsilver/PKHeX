@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-namespace PKHeX.Core
+﻿namespace PKHeX.Core
 {
     /// <summary>
     /// <see cref="PersonalInfo"/> class with values from Generation 1 games.
@@ -9,14 +7,16 @@ namespace PKHeX.Core
     {
         protected PersonalInfoG1() { }
         public const int SIZE = 0x1C;
+
         public PersonalInfoG1(byte[] data)
         {
             if (data.Length != SIZE)
                 return;
 
             Data = data;
-            TMHM = GetBits(Data.Skip(0x14).Take(0x8).ToArray());
+            TMHM = GetBits(Data, 0x14, 0x8);
         }
+
         public override byte[] Write()
         {
             SetBits(TMHM).CopyTo(Data, 0x14);
@@ -60,6 +60,7 @@ namespace PKHeX.Core
         public override int BaseFriendship { get => 0; set { } }
         public override int EscapeRate { get => 0; set { } }
         public override int Color { get => 0; set { } }
+
         public int[] Moves
         {
             get => new[] { Move1, Move2, Move3, Move4 };
@@ -69,8 +70,7 @@ namespace PKHeX.Core
                 Move1 = value[0];
                 Move2 = value[1];
                 Move3 = value[2];
-                Move4 = value[3]; 
-                
+                Move4 = value[3];
             }
         }
     }
